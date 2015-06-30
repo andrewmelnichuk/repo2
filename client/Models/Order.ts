@@ -5,6 +5,6 @@ module Models {
     @property
     public num: number;
     
-    public items: Array<any>;
+    public items: Array<number>;
   }
 }
