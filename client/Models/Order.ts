@@ -6,5 +6,6 @@ module Models {
     public num: number;
     
     public items: Array<any>;
+    public time: Date;
   }
 }
