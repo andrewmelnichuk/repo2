@@ -4,10 +4,10 @@
     "dnx451":{}
   },
   "dependencies": {
-    
+    "System.IO": "4.0.10-beta-23019",
+    "System.Collections": "4.0.10-beta-23019"
   },
   "commands": {
     "run": "run"
-  },
-  "shared": "../Shared/**/*.cs"
+  }
 }
