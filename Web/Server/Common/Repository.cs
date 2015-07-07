@@ -98,7 +98,8 @@ namespace Server.Common
         var serializer = new JsonSerializer();
         serializer.Serialize(writer, Storage); 
       }
-      // TODO handle errors
+      // TODO reinitialize on error
+      // TODO atomic save (tmp file with rename???)
     }
     
     private static ApplicationException NotFoundException(int id)
