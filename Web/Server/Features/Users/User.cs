@@ -1,10 +1,13 @@
-public class User
+namespace Server.Features.Users
 {
-  public int Id;
-  public string Login;
-  public string Password;
-  public string FirstName;
-  public string LastName;
-  public string Address;
-  public string Name;
+  public class User : Entity
+  {
+    public int Id { get; set; }
+    public string Login;
+    public string Password;
+    public string FirstName;
+    public string LastName;
+    public string Address;
+    public string Name;
+  }  
 }
