@@ -5,6 +5,7 @@ namespace MvcSample.Web
 {
     public class HomeController : Controller
     {
+        [HttpGet()]
         public IActionResult Index()
         {
             return View(CreateUser());
@@ -14,7 +15,7 @@ namespace MvcSample.Web
         {
             User user = new User()
             {
-                Name = "Andrew",
+                Name = "My name",
                 Address = "My address"
             };
 

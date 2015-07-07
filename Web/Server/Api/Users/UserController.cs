@@ -1,19 +1,28 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Mvc;
-using Server.Features.Users;
+using Server.Common;
 
-[Route("api/[controller]")]
-public class UsersController : Controller
+namespace Server.Api.Users
 {
-  [HttpGet("{id:int}")]
-  public User Get(int id)
+  [Route("api/[controller]")]
+  public class UsersController : Controller
   {
-    return Repository<User>.GetById(id); 
-  }
-  
-  [HttpGet]
-  public List<User> Get()
-  {
-    return Repository<User>.GetAll();
+    [HttpGet("{id:int}")]
+    public User Get(int id)
+    {
+      return Repository<User>.GetById(id); 
+    }
+    
+    [HttpGet]
+    public List<User> Get()
+    {
+      return Repository<User>.GetAll();
+    }
+    
+    [HttpPost]
+    public int Post([FromBody] User user)
+    {
+      return Repository<User>.Add(user);
+    }
   }
 }

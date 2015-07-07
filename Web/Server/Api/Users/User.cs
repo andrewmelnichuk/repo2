@@ -1,4 +1,6 @@
-namespace Server.Features.Users
+using Server.Common;
+
+namespace Server.Api.Users
 {
   public class User : Entity
   {
