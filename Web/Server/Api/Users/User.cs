@@ -2,7 +2,6 @@ namespace Server.Features.Users
 {
   public class User : Entity
   {
-    public int Id { get; set; }
     public string Login;
     public string Password;
     public string FirstName;

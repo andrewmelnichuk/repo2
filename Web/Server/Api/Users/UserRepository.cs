@@ -18,15 +18,16 @@ namespace Server.Features.Users
   
   public static class Repository<T> where T : Entity
   {
-    private static ConcurrentDictionary<int, T> Storage = new ConcurrentDictionary<int, T>();
+    private static ConcurrentDictionary<int, T> Storage;
     
     static Repository()
     {
-      var filePath = string.Format("./Data/{0}}.json", typeof(T).Name);
+      var filePath = string.Format("./Data/{0}.json", typeof(T).Name);
       using (var stream = File.Open(filePath, FileMode.OpenOrCreate))
       using (var reader = new StreamReader(stream)) {
         var serializer = new JsonSerializer();
-        Storage = (ConcurrentDictionary<int, T>) serializer.Deserialize(reader, typeof(ConcurrentDictionary<int, T>)); 
+        Storage = (ConcurrentDictionary<int, T>) serializer.Deserialize(reader, typeof(ConcurrentDictionary<int, T>))
+        ?? new ConcurrentDictionary<int, T>(); 
       }
     }
     
