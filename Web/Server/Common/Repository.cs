@@ -104,7 +104,7 @@ namespace Server.Common
     
     private static ApplicationException NotFoundException(int id)
     {
-      return new ApplicationException(string.Format("User #{0} not found", id));      
+      return new ApplicationException(string.Format("Entity #{0} of type '{1}' not found", id, typeof(T).Name));      
     }
   }
 }
