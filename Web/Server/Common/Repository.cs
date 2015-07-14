@@ -39,6 +39,21 @@ namespace Server.Common
       }
     }
     
+    public static List<T> GetByIds(int[] ids)
+    {
+      Lock.EnterReadLock();
+      try {
+        return Storage
+          .Where(kvp => ids.Contains(kvp.Key))
+          .Select(kvp => kvp.Value.Clone())
+          .Cast<T>()
+          .ToList();        
+      }
+      finally {
+        Lock.ExitReadLock();
+      }
+    }
+    
     public static List<T> GetAll()
     {
       Lock.EnterReadLock();
