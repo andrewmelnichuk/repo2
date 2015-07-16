@@ -26,6 +26,19 @@ var a;
 // a = new Date();
 a = 1;
 a = "string";
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        var Repository = (function () {
+            function Repository() {
+                this._storage = {};
+            }
+            return Repository;
+        })();
+        Common.Repository = Repository;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
 var DataAccess;
 (function (DataAccess) {
     var Products = (function () {
@@ -38,6 +51,16 @@ var DataAccess;
     })();
     DataAccess.Products = Products;
 })(DataAccess || (DataAccess = {}));
+var Models;
+(function (Models) {
+    var Entity = (function () {
+        function Entity() {
+        }
+        return Entity;
+    })();
+    Models.Entity = Entity;
+})(Models || (Models = {}));
+///<reference path="../Models/Entity.ts"/>
 var DataAccess;
 (function (DataAccess) {
     var Users = (function () {
@@ -67,7 +90,7 @@ var Events;
         }
         Object.defineProperty(EventBus, "Instance", {
             get: function () {
-                return (EventBus._instance == null)
+                return (!EventBus._instance)
                     ? (EventBus._instance = new EventBus())
                     : EventBus._instance;
             },
@@ -101,7 +124,6 @@ var Events;
             else
                 console.log("handlers for channel '%s', event '%s' not found", channel, event);
         };
-        EventBus._instance = null;
         return EventBus;
     })();
     Events.EventBus = EventBus;
@@ -129,40 +151,37 @@ var Models;
     })();
     Models.Order = Order;
 })(Models || (Models = {}));
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var Models;
 (function (Models) {
-    var User = (function () {
+    var User = (function (_super) {
+        __extends(User, _super);
         function User() {
-            this.orders = new List();
+            _super.apply(this, arguments);
         }
+        __decorate([
+            property
+        ], User.prototype, "login");
+        __decorate([
+            property
+        ], User.prototype, "password");
         __decorate([
             property
         ], User.prototype, "firstName");
         __decorate([
             property
         ], User.prototype, "lastName");
-        __decorate([
-            property
-        ], User.prototype, "age");
-        __decorate([
-            property
-        ], User.prototype, "orders");
         User = __decorate([
-            model("models.Model")
+            model("models.User")
         ], User);
         return User;
-    })();
+    })(Models.Entity);
     Models.User = User;
-    var List = (function () {
-        function List() {
-            this._items = [];
-        }
-        List.prototype.add = function (item) {
-            this._items.push(item);
-        };
-        return List;
-    })();
-    Models.List = List;
 })(Models || (Models = {}));
 var Views;
 (function (Views) {
@@ -239,12 +258,6 @@ var Views;
     Views.ViewBase = ViewBase;
 })(Views || (Views = {}));
 ///<reference path="ViewBase.ts"/>
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 var Views;
 (function (Views) {
     var Main = (function (_super) {
@@ -278,6 +291,9 @@ window.onload = function () {
     m.render();
     $("#body").replaceWith(m.$el);
     setTimeout(function () { return m.destroy(); }, 3000);
+    var u = new Models.User();
+    u.id = 1;
+    console.log(u.id);
 };
 ///<reference path="ViewBase.ts"/>
 var Views;

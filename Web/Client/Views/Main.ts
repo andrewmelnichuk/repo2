@@ -34,4 +34,9 @@ window.onload = () => {
   m.render();
   $("#body").replaceWith(m.$el);
   setTimeout(() => m.destroy(), 3000);
+  
+  var u = new Models.User();
+
+  u.id = 1;
+  console.log(u.id);
 };

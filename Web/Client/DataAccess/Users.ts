@@ -1,3 +1,5 @@
+///<reference path="../Models/Entity.ts"/>
+
 module DataAccess {
   export class Users {
     

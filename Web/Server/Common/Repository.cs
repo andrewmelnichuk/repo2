@@ -105,7 +105,7 @@ namespace Server.Common
         Lock.ExitWriteLock();
       }
     }
-        
+
     private static void Save()
     {
       using (var stream = File.Open(FilePath, FileMode.Create))

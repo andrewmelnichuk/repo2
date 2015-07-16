@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES5",
-    "out": "public/main.js",
-    "outDir": "."
+    "out": "./Web/Client/Public/main.js",
+    "listFiles": true
   }
 }

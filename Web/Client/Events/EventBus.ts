@@ -1,15 +1,13 @@
 module Events {
 
-  export interface IDictionary<TValue> {
-    [key: string]: TValue;
-  }
-  
+  import IDictionary = Client.Common.IDictionary;
+
   export class EventBus {
     
-    private static _instance: EventBus = null;
+    private static _instance: EventBus;
     
     public static get Instance(): EventBus {
-      return (EventBus._instance == null)
+      return (!EventBus._instance)
         ? (EventBus._instance = new EventBus())
         : EventBus._instance;
     }
