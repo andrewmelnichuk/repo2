@@ -1,7 +1,7 @@
-module Models {
+module Client.Models {
  
   @model("models.User")
-  export class User extends Models.Entity {
+  export class User extends Entity {
     @property
     public login: string;
     
@@ -13,5 +13,14 @@ module Models {
     
     @property
     public lastName: string;
+    
+    public static fromJson(json: any): User {
+      var u = new User();
+      u.login = json.Login;
+      u.password = json.Password;
+      u.firstName = json.FirstName;
+      u.lastName = json.LastName;
+      return u;
+    }
   }
 }

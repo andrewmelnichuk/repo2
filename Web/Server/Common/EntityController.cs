@@ -4,6 +4,7 @@ using Microsoft.AspNet.Mvc;
 namespace Server.Common
 {
   [Route("api/[controller]")]
+  [CorsEnabled]
   public class EntityController<T> : Controller where T : Entity
   {
     [HttpGet("{id:int}")]
@@ -15,7 +16,7 @@ namespace Server.Common
     [HttpGet]
     public List<T> Get()
     {
-      return Repository<T>.GetAll();
+      return Repository<T>.GetAll(true);
     }
     
     [HttpPost]

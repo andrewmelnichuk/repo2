@@ -3,7 +3,8 @@ namespace Server.Common
   public class Entity
   {
     public int Id;
-    public int Revision;    
+    public long Revision;
+    public bool IsDeleted;
     
     public Entity Clone()
     {

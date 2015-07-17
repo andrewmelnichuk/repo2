@@ -1,4 +1,4 @@
-module Models {
+module Client.Models {
   
   export class Entity {
     public id: number;

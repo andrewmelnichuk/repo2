@@ -31,9 +31,23 @@ var Client;
     var Common;
     (function (Common) {
         var Repository = (function () {
-            function Repository() {
+            function Repository(url) {
                 this._storage = {};
+                this._url = url;
             }
+            Repository.prototype.get = function (id) {
+                var _this = this;
+                var entity = this._storage[id];
+                return new Promise(function (resolve, reject) {
+                    if (entity)
+                        resolve(entity);
+                    else
+                        $.get(_this._url).done(function () { return resolve(null); });
+                });
+            };
+            Repository.prototype.get2 = function () {
+                this.get(1).then(function (value) { return console.log(value); }, function (error) { return console.log("error"); });
+            };
             return Repository;
         })();
         Common.Repository = Repository;
@@ -164,6 +178,14 @@ var Models;
         function User() {
             _super.apply(this, arguments);
         }
+        User.fromJson = function (json) {
+            var u = new User();
+            u.login = json.Login;
+            u.password = json.Password;
+            u.firstName = json.FirstName;
+            u.lastName = json.LastName;
+            return u;
+        };
         __decorate([
             property
         ], User.prototype, "login");
@@ -291,10 +313,20 @@ window.onload = function () {
     m.render();
     $("#body").replaceWith(m.$el);
     setTimeout(function () { return m.destroy(); }, 3000);
-    var u = new Models.User();
-    u.id = 1;
-    console.log(u.id);
+    UserMgr.get(1).then(function (user) { return console.log(user); });
 };
+var UserMgr = (function () {
+    function UserMgr() {
+    }
+    UserMgr.get = function (id) {
+        return new Promise(function (resolve, reject) {
+            $.getJSON("http://localhost:5004/api/users/1")
+                .done(function (result) { return resolve(Models.User.fromJson(result)); })
+                .fail(function (result) { });
+        });
+    };
+    return UserMgr;
+})();
 ///<reference path="ViewBase.ts"/>
 var Views;
 (function (Views) {

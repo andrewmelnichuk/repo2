@@ -34,9 +34,19 @@ window.onload = () => {
   m.render();
   $("#body").replaceWith(m.$el);
   setTimeout(() => m.destroy(), 3000);
-  
-  var u = new Models.User();
 
-  u.id = 1;
-  console.log(u.id);
+  UserMgr.get(1).then(user => console.log(user));
+   
 };
+
+import User = Client.Models.User;
+
+class UserMgr {
+  public static get(id:number): Promise<User> {
+    return new Promise<User>((resolve, reject) => {
+      $.getJSON("http://localhost:5004/api/users/1")
+       .done(result => resolve(User.fromJson(result)))
+       .fail(result => {});
+    });
+  }
+}

@@ -24,7 +24,8 @@ module Client.Common {
     public get2(): void {
       this.get(1).then(
         (value: T) => console.log(value),
-        (error: any) => console.log("error"));
+        (error: any) => console.log("error")
+      );
     }
   } 
 }

@@ -16,11 +16,7 @@ namespace Server.Common
     
     static Repository()
     {
-      using (var stream = File.Open(FilePath, FileMode.OpenOrCreate))
-      using (var reader = new StreamReader(stream)) {
-        var serializer = new JsonSerializer();
-        Storage = (Dictionary<int, T>) serializer.Deserialize(reader, typeof(Dictionary<int, T>)) ?? new Dictionary<int, T>(); 
-      }
+      ReadStorage();
       NextId = Storage.Count > 0 ? Storage.Keys.Last() + 1 : 1;
     }
     
@@ -54,11 +50,15 @@ namespace Server.Common
       }
     }
     
-    public static List<T> GetAll()
+    public static List<T> GetAll(bool includeDeleted)
     {
       Lock.EnterReadLock();
       try {
-        return Storage.Values.Select(v => v.Clone()).Cast<T>().ToList();
+        return Storage.Values
+          .Where(e => !e.IsDeleted || includeDeleted)
+          .Select(v => v.Clone())
+          .Cast<T>()
+          .ToList();
       }
       finally {
         Lock.ExitReadLock();
@@ -70,9 +70,15 @@ namespace Server.Common
       Lock.EnterWriteLock();
       try {
         entity.Id = NextId++;
+        entity.Revision = Revision.Next(Lock);
         Storage.Add(entity.Id, entity);
-        Save();
+        WriteStorage();
         return entity.Id;
+      }
+      catch {
+        if (Storage.ContainsKey(entity.Id))
+          Storage.Remove(entity.Id);
+        throw;
       }
       finally {
         Lock.ExitWriteLock();
@@ -81,34 +87,68 @@ namespace Server.Common
     
     public static void Delete(int id)
     {
+      T copy = null;
+      
       Lock.EnterWriteLock();
       try {
-        if (!Storage.Remove(id))
-          throw NotFoundException(id);
-        Save();
+        if (Storage.ContainsKey(id)) { 
+          copy = (T) Storage[id].Clone(); 
+          Storage[id].IsDeleted = true;
+          Storage[id].Revision = Revision.Next(Lock);
+          WriteStorage();
+        }
+      }
+      catch {
+        if (Storage.ContainsKey(id))
+          Storage[id] = copy;
+        throw;
       }
       finally {
         Lock.ExitWriteLock();
       }
+      
+      if (copy == null)
+        throw NotFoundException(id);
     }
     
     public static void Update(T entity)
     {
+      T copy = null;
+      
       Lock.EnterWriteLock();
       try {
-        if (!Storage.ContainsKey(entity.Id))
-          throw NotFoundException(entity.Id);
-        Storage[entity.Id] = entity;
-        Save();
+        if (Storage.ContainsKey(entity.Id)) {
+          copy = (T) Storage[entity.Id].Clone(); 
+          Storage[entity.Id] = entity;
+          Storage[entity.Id].Revision = Revision.Next(Lock);
+          WriteStorage();
+        }
+      }
+      catch {
+        if (Storage.ContainsKey(entity.Id))
+          Storage[entity.Id] = copy;
+        throw;
       }
       finally {
         Lock.ExitWriteLock();
       }
+      
+      if (copy == null)
+        throw NotFoundException(entity.Id);
     }
 
-    private static void Save()
+    private static void ReadStorage()
     {
-      using (var stream = File.Open(FilePath, FileMode.Create))
+      using (var stream = File.Open(FilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read))
+      using (var reader = new StreamReader(stream)) {
+        var serializer = new JsonSerializer();
+        Storage = (Dictionary<int, T>) serializer.Deserialize(reader, typeof(Dictionary<int, T>)) ?? new Dictionary<int, T>(); 
+      }
+    }
+
+    private static void WriteStorage()
+    {
+      using (var stream = File.Open(FilePath, FileMode.Create, FileAccess.Write, FileShare.Read))
       using (var writer = new StreamWriter(stream)) {
         var serializer = new JsonSerializer();
         serializer.Serialize(writer, Storage); 
