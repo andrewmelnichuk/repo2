@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using Server.Common.Updates;
 
-namespace Server.Common
+namespace Server.Common.Data
 {
-  public static class Repository<T> where T : Entity
+  public class Repository<T> : IUpdatesProvider where T : Entity
   {
     private static int NextId;
     private static Dictionary<int, T> Storage;
@@ -20,7 +21,7 @@ namespace Server.Common
       NextId = Storage.Count > 0 ? Storage.Keys.Last() + 1 : 1;
     }
     
-    public static T GetById(int id)
+    public T GetById(int id)
     {
       Lock.EnterReadLock();
       try {
@@ -35,7 +36,7 @@ namespace Server.Common
       }
     }
     
-    public static List<T> GetByIds(int[] ids)
+    public List<T> GetByIds(int[] ids)
     {
       Lock.EnterReadLock();
       try {
@@ -50,7 +51,7 @@ namespace Server.Common
       }
     }
     
-    public static List<T> GetAll(bool includeDeleted)
+    public List<T> GetAll(bool includeDeleted)
     {
       Lock.EnterReadLock();
       try {
@@ -65,7 +66,7 @@ namespace Server.Common
       } 
     }
 
-    public static int Add(T entity)
+    public int Add(T entity)
     {
       Lock.EnterWriteLock();
       try {
@@ -85,7 +86,7 @@ namespace Server.Common
       }
     }
     
-    public static void Delete(int id)
+    public void Delete(int id)
     {
       T copy = null;
       
@@ -111,7 +112,7 @@ namespace Server.Common
         throw NotFoundException(id);
     }
     
-    public static void Update(T entity)
+    public void Update(T entity)
     {
       T copy = null;
       
@@ -135,6 +136,21 @@ namespace Server.Common
       
       if (copy == null)
         throw NotFoundException(entity.Id);
+    }
+
+    public List<Entity> GetUpdates(long revision)
+    {
+      Lock.EnterReadLock();
+      try {
+        var result = new List<Entity>();
+        foreach (var kvp in Storage)
+          if (kvp.Value.Revision > revision)
+            result.Add(kvp.Value);
+        return result;
+      }
+      finally {
+        Lock.ExitReadLock();
+      }
     }
 
     private static void ReadStorage()

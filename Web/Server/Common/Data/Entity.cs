@@ -1,4 +1,4 @@
-namespace Server.Common
+namespace Server.Common.Data
 {
   public class Entity
   {

@@ -1,4 +1,4 @@
-using Server.Common;
+using Server.Common.Data;
 
 namespace Server.Api.Services
 {
