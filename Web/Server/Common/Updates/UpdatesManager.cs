@@ -16,9 +16,9 @@ namespace Server.Common.Updates
         .Where(type => type.IsSubclassOf(typeof(Entity)))
         .Select(entityType => typeof(Repository<>).MakeGenericType(entityType))
         .Select(repoType => (IUpdatesProvider) Activator.CreateInstance(repoType))
-        .ToList();     
+        .ToList();
     }
-    
+
     public static List<Entity> GetUpdates(long revision)
     {
       var result = new List<Entity>();
