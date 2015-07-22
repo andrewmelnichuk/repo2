@@ -19,7 +19,7 @@ namespace Server.Common.Data
     }
 
     // MUST be called under lock
-    public static long Next(ReaderWriterLockSlim locker)
+    public static long Next()
     {
       var rev = Interlocked.Increment(ref _curRev);
 

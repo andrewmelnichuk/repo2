@@ -71,7 +71,7 @@ namespace Server.Common.Data
       Lock.EnterWriteLock();
       try {
         entity.Id = NextId++;
-        entity.Revision = Revision.Next(Lock);
+        entity.Revision = Revision.Next();
         Storage.Add(entity.Id, entity);
         WriteStorage();
         return entity.Id;
@@ -95,13 +95,13 @@ namespace Server.Common.Data
         if (Storage.ContainsKey(id)) { 
           copy = (T) Storage[id].Clone(); 
           Storage[id].IsDeleted = true;
-          Storage[id].Revision = Revision.Next(Lock);
+          Storage[id].Revision = Revision.Next();
           WriteStorage();
         }
       }
       catch {
-        if (Storage.ContainsKey(id))
-          Storage[id] = copy;
+        if (copy != null)
+          Storage[copy.Id] = copy;
         throw;
       }
       finally {
@@ -121,13 +121,13 @@ namespace Server.Common.Data
         if (Storage.ContainsKey(entity.Id)) {
           copy = (T) Storage[entity.Id].Clone(); 
           Storage[entity.Id] = entity;
-          Storage[entity.Id].Revision = Revision.Next(Lock);
+          Storage[entity.Id].Revision = Revision.Next();
           WriteStorage();
         }
       }
       catch {
-        if (Storage.ContainsKey(entity.Id))
-          Storage[entity.Id] = copy;
+        if (copy != null)
+          Storage[copy.Id] = copy;
         throw;
       }
       finally {
