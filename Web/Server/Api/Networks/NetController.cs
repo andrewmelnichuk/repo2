@@ -2,7 +2,7 @@ using Server.Common;
 
 namespace Server.Api.Networks
 {
-  public class NetworksController : EntityController<Network>
+  public class NetsController : EntityController<Net>
   {
   }
 }

@@ -1,8 +1,8 @@
 using Server.Common.Data;
 
-namespace Server.Api.Games
+namespace Server.Api.Apps
 {
-  public class Game : Entity
+  public class App : Entity
   {
     public string Name;
     public string Code;

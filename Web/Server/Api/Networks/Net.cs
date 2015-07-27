@@ -1,8 +1,8 @@
 using Server.Common.Data;
 
-namespace Server.Api.Langs
+namespace Server.Api.Networks
 {
-  public class Lang : Entity
+  public class Net : Entity
   {
     public string Name;
   }

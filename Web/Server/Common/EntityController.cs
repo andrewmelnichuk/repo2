@@ -23,7 +23,7 @@ namespace Server.Common
     }
     
     [HttpPost]
-    public int Post([FromBody] T entity)
+    public virtual int Post([FromBody] T entity)
     {
       return _repo.Add(entity);
     }

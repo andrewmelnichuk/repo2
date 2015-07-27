@@ -10,7 +10,8 @@
     "Microsoft.AspNet.Mvc": "6.0.0-beta5",
     "Microsoft.AspNet.Server.IIS": "1.0.0-beta5",
     "Microsoft.AspNet.Server.WebListener": "1.0.0-beta5",
-    "Newtonsoft.Json": "7.0.1"
+    "Newtonsoft.Json": "7.0.1",
+    "FluentValidation": "5.6.2.0"
   },
   "commands": {
     "kestrel": "Microsoft.AspNet.Hosting --server Kestrel --server.urls http://localhost:5004"

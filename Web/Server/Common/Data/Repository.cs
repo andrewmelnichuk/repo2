@@ -35,7 +35,21 @@ namespace Server.Common.Data
         Lock.ExitReadLock();
       }
     }
-    
+
+    public bool TryGetById(int id, out T entity)
+    {
+      try
+      {
+        entity = GetById(id);
+        return true;
+      }
+      catch (ApplicationException)
+      {
+        entity = null;
+        return false;
+      }
+    }
+
     public List<T> GetByIds(int[] ids)
     {
       Lock.EnterReadLock();
