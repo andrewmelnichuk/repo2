@@ -18,7 +18,6 @@ namespace Server.Common.Data
       WriteRev(_maxRev);
     }
 
-    // MUST be called under lock
     public static long Next()
     {
       var rev = Interlocked.Increment(ref _curRev);
@@ -30,7 +29,7 @@ namespace Server.Common.Data
 
       return rev;
     }
- 
+
     private static long ReadRev()
     {
       long result;
@@ -38,7 +37,7 @@ namespace Server.Common.Data
       using (var reader = new StreamReader(stream))
         return long.TryParse(reader.ReadToEnd(), out result) ? result : 0; 
     }
-    
+
     private static void WriteRev(long rev)
     {
       using (var stream = File.Open(_revFilePath, FileMode.Open))

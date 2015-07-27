@@ -1,6 +1,6 @@
 using Microsoft.AspNet.Mvc;
 using Server.Common.Data;
-using Server.Common.Updates;
+using Server.Common.Changes;
 using System.Collections.Generic;
 
 namespace Server.Api.Sync
@@ -11,7 +11,7 @@ namespace Server.Api.Sync
     [HttpGet("index")]
     public List<Entity> Sync(long rev)
     {
-      return UpdatesManager.GetUpdates(rev);
+      return ChangesManager.GetChanges(rev);
     }
   }
 }

@@ -1,6 +1,6 @@
 using Server.Common.Data;
 
-namespace Server.Api.Networks
+namespace Server.Api.Nets
 {
   public class Net : Entity
   {

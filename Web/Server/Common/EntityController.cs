@@ -1,31 +1,33 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Mvc;
 using Server.Common.Data;
+using FluentValidation;
 
 namespace Server.Common
 {
   [CorsEnabled]
   [Route("api/[controller]")]
-  public class EntityController<T> : Controller where T : Entity
+  public class EntityController<TEntity, TValidator> : Controller 
+    where TEntity : Entity
+    where TValidator : AbstractValidator<TEntity>, new()
   {
-    private static Repository<T> _repo = new Repository<T>();
-    
     [HttpGet("{id:int}")]
-    public T Get(int id)
+    public TEntity Get(int id)
     {
-      return _repo.GetById(id); 
+      return Repository<TEntity>.GetById(id); 
     }
     
     [HttpGet]
-    public List<T> Get()
+    public List<TEntity> Get()
     {
-      return _repo.GetAll(true);
+      return Repository<TEntity>.GetAll(true);
     }
     
     [HttpPost]
-    public virtual int Post([FromBody] T entity)
+    public virtual int Post([FromBody] TEntity entity)
     {
-      return _repo.Add(entity);
+      new TValidator().ValidateAndThrow(entity);
+      return Repository<TEntity>.Add(entity);
     }
   }
 }

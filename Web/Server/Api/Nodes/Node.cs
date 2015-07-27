@@ -1,8 +1,8 @@
 using Server.Common.Data;
 
-namespace Server.Api.Servers
+namespace Server.Api.Nodes
 {
-  public class Server : Entity
+  public class Node : Entity
   {
     public string IpAddress;
     public string Description;
