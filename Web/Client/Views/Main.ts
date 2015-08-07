@@ -34,10 +34,11 @@ window.onload = () => {
   m.render();
   $("#body").replaceWith(m.$el);
 
-  SyncCmd.get(1).then(user => console.log(user));
-  var httpClient = new HttpClient("http://localhost:5004/api/users/1")
-    .method(HttpMethod.Post)
-    .call();
+  var cmd = new SyncCmd(0)
+    .done(() => console.log('sync done'))
+    .fail(() => console.log('sync fail'))
+    .always(() => console.log('sync always'))
+
 };
 
 import User = Client.Models.User;
@@ -47,14 +48,35 @@ enum HttpBodyFormat {UrlEncoded, Json};
 
 class HttpClient {
   private _url: string;
-  private _query: Object;
   private _method: HttpMethod;
-  private _bodyData: Object;
-  private _bodyFormat: HttpBodyFormat;
+  private _body: string;
+  private _query: string;
+  private _headers: Client.Common.IDictionary<string> = {};
   private _xhr: XMLHttpRequest = new XMLHttpRequest();
 
-  constructor (url: string) {
+  constructor (url?: string) {
+    if (url)
+      this._url = url;
+  }
+
+  public url(url: string): HttpClient {
     this._url = url;
+    return this;
+  }
+
+  public query(query: string): HttpClient {
+    this._query = query;
+    return this;
+  }
+
+  public header(name: string, value: string): HttpClient {
+    this._headers[name] = value;
+    return this;
+  }
+
+  public body(data: string): HttpClient {
+    this._body = data;
+    return this;
   }
 
   public method(method: HttpMethod): HttpClient {
@@ -62,31 +84,24 @@ class HttpClient {
     return this;
   }
 
-  public query(params: Object): HttpClient {
-    this._query = params;
-    return this;
-  }
-
-  public body(format: HttpBodyFormat, data: Object): HttpClient {
-    this._bodyData = data;
-    this._bodyFormat = format;
-    return this;
-  }
-
-  public done(callback: (response: string) => void): HttpClient {
-    return this;
-  }
-
-  public fails(callback: (response: string) => void): HttpClient {
-    return this;
-  }
-  
   public call(): void {
-    this._xhr.open(HttpMethod[this._method], this._url, true);
-    if (this._method == HttpMethod.Get)
-      this._xhr.send();
-    else if (this._method == HttpMethod.Post)
-      this._xhr.send(JSON.stringify(this._query));
+
+    var url = this._url;
+
+    if (this._query)
+      url += '?' + this._query;
+
+    for (var header in this._headers)
+      this._xhr.setRequestHeader(header, this._headers[header]);
+
+    var body = (this._method != HttpMethod.Get) ? this._body : undefined;
+
+    this._xhr.open(HttpMethod[this._method], url, true);
+    this._xhr.send(body);
+  }
+
+  public response(callback: (response: string) => void): HttpClient {
+    return this;
   }
 }
 
@@ -102,29 +117,77 @@ class Url {
   }
 }
 
+class Utils {
+  public static urlEncode(data: Object): string {
+    var result: string;
+    var i = 0, keys = Object.keys(data);
+    for (var key in keys) {
+      result += key + "=" + data[key];
+      if (i < keys.length - 1)
+        result += '&';
+    }
+    return result;
+  }
+}
+
+class JsonCmd extends BaseCmd {
+
+  private _client = new HttpClient(); 
+
+
+  constructor(url: string, method: HttpMethod, data?: Object, query?: Object) {
+    super();
+    
+    // create envelope
+    
+    this._client
+        .url(Url.api(url))
+        .method(method)
+        .query(Utils.urlEncode(query))
+        .body(JSON.stringify(data))
+        .header("Content-Type", "application/json")
+        .response(this.response);
+  }
+
+  private response(response: any): void {
+    // deserealize and process envelope
+    var code;
+    if (code == 200)
+      this._done({});
+    else if (code != 500)
+      this._fail({});
+    this._always({});
+  }
+
+  public execute(): void {
+    this._client.call();
+  }
+}
+
 class BaseCmd {
-  constructor(url: string) {
-    
+
+  private _cbDefault: (result: any) => void = _ => {};
+
+  protected _done: (result: any) => void = this._cbDefault;
+  protected _fail: (result: any) => void = this._cbDefault;
+  protected _always: (result: any) => void = this._cbDefault;
+  
+  public done(callback: (result: any) => void): BaseCmd {
+    this._done = callback || this._cbDefault;
+    return this;
   }
   
-  private _success: (result: any) => void;
-  
-  public success(callback: (result: any) => void): void {
-    this._success = callback;
+  public fail(callback: (result: any) => void): BaseCmd {
+    this._fail = callback || this._cbDefault;
+    return this;
   }
-  
-  public fail(callback: (result: any) => void): void {
-    
+
+  public always(callback: (result: any) => void): BaseCmd {
+    this._always = callback || this._cbDefault;
+    return this;
   }
   
   public execute(): void {
-    $.getJSON("")
-      .done(this.onSuccess);
-  }
-  
-  protected onSuccess(result: any): void {
-    if (this._success)
-      this._success(result);
   }
 }
 
@@ -132,21 +195,22 @@ class SyncCmd extends BaseCmd {
   private _rev: number;
 
   constructor (rev: number) {
-    super(Url.api("/sync/index?rev="));
+    super();
     this._rev = rev;
   }
 
-  protected onSuccess(result: any): void {
-    console.log('update model');
-    super.onSuccess (result);
-  }
-
   public execute() {
-    new HttpClient("/sync/index")
-    .query({rev: this._rev})
-    .method(HttpMethod.Get)
-    .done(this.doSync)
-    .call();
+    new JsonCmd("/sync/index", HttpMethod.Get, undefined, {rev: this._rev})
+      .done(result => {
+        // update model
+        this._done(result);
+      })
+      .fail(result => {
+        this._fail(result);
+      })
+      .always(result => {
+        this._always(result);
+      });
   }
 
   private doSync(result: any): void {
