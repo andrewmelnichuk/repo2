@@ -11,6 +11,8 @@ namespace Server.Api.Clusters
     {
       RuleFor(c => c.AppId).Must(Repository<App>.Contains).WithMessage("Invalid app id");
       RuleFor(c => c.NetId).Must(Repository<Net>.Contains).WithMessage("Invalid net id");
+      RuleFor(c => c.Master).NotEmpty().WithMessage("Master server required");
+      RuleFor(c => c.Segments).NotEmpty().WithMessage("At least one segment required");
     }
   }
 }

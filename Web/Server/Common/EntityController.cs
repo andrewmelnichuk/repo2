@@ -16,13 +16,13 @@ namespace Server.Common
     {
       return Repository<TEntity>.GetById(id); 
     }
-    
+
     [HttpGet]
     public List<TEntity> Get()
     {
       return Repository<TEntity>.GetAll(true);
     }
-    
+
     [HttpPost]
     public virtual int Post([FromBody] TEntity entity)
     {
