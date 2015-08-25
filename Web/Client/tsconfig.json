@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "out": "./Web/Client/Public/main-es6.js",
+    "target": "ES5",
+    "out": "./Web/Client/Public/main.js",
     "listFiles": true,
     "experimentalDecorators": true
   }
