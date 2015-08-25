@@ -65,40 +65,6 @@ var DataAccess;
     })();
     DataAccess.Products = Products;
 })(DataAccess || (DataAccess = {}));
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var Entity = (function () {
-            function Entity() {
-            }
-            return Entity;
-        })();
-        Models.Entity = Entity;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
-///<reference path="../Models/Entity.ts"/>
-var DataAccess;
-(function (DataAccess) {
-    var Users = (function () {
-        function Users() {
-        }
-        Users.prototype.Save = function () {
-            console.log("User saved.");
-        };
-        Users.Fn = function () {
-            console.log("static fn");
-        };
-        Users.prototype.SetI = function (val) {
-            this.i = val;
-        };
-        Users.prototype.SetC = function (val) {
-            this.c = val;
-        };
-        return Users;
-    })();
-    DataAccess.Users = Users;
-})(DataAccess || (DataAccess = {}));
 var Events;
 (function (Events) {
     var EventBus = (function () {
@@ -158,6 +124,19 @@ var Client;
         Models.Data = Data;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var Entity = (function () {
+            function Entity() {
+            }
+            return Entity;
+        })();
+        Models.Entity = Entity;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="Entity.ts"/>
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -286,6 +265,24 @@ var Views;
 ///<reference path="ViewBase.ts"/>
 var Views;
 (function (Views) {
+    var TextBox = (function (_super) {
+        __extends(TextBox, _super);
+        function TextBox() {
+            _super.apply(this, arguments);
+        }
+        TextBox.prototype.render = function () {
+            _super.prototype.render.call(this);
+            this.$el.html("<input type=\"text\" value=\"asd\"></input>");
+        };
+        return TextBox;
+    })(Views.ViewBase);
+    Views.TextBox = TextBox;
+})(Views || (Views = {}));
+///<reference path="ViewBase.ts"/>
+///<reference path="TextBox.ts"/>
+///<reference path="../typings/es6-promise/es6-promise.d.ts"/>
+var Views;
+(function (Views) {
     var Main = (function (_super) {
         __extends(Main, _super);
         function Main() {
@@ -312,20 +309,11 @@ var Views;
 function Activator(type) {
     return new type();
 }
-window.onload = function () {
-    var m = new Views.Main();
-    m.render();
-    $("#body").replaceWith(m.$el);
-    var cmd = new SyncCmd(0)
-        .done(function () { return console.log('sync done'); })
-        .fail(function () { return console.log('sync fail'); })
-        .always(function () { return console.log('sync always'); });
-};
 var User = Client.Models.User;
 var HttpMethod;
 (function (HttpMethod) {
-    HttpMethod[HttpMethod["Get"] = 0] = "Get";
-    HttpMethod[HttpMethod["Post"] = 1] = "Post";
+    HttpMethod[HttpMethod["GET"] = 0] = "GET";
+    HttpMethod[HttpMethod["POST"] = 1] = "POST";
 })(HttpMethod || (HttpMethod = {}));
 ;
 var HttpBodyFormat;
@@ -365,10 +353,10 @@ var HttpClient = (function () {
         var url = this._url;
         if (this._query)
             url += '?' + this._query;
+        var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+        this._xhr.open(HttpMethod[this._method], url, true);
         for (var header in this._headers)
             this._xhr.setRequestHeader(header, this._headers[header]);
-        var body = (this._method != HttpMethod.Get) ? this._body : undefined;
-        this._xhr.open(HttpMethod[this._method], url, true);
         this._xhr.send(body);
     };
     HttpClient.prototype.response = function (callback) {
@@ -387,8 +375,8 @@ var Url = (function () {
     }
     Url.api = function (path) {
         return (path.charAt(0) != '/')
-            ? '/' + Config.ApiUrl
-            : Config.ApiUrl;
+            ? Config.ApiUrl + '/' + path
+            : Config.ApiUrl + path;
     };
     return Url;
 })();
@@ -396,10 +384,10 @@ var Utils = (function () {
     function Utils() {
     }
     Utils.urlEncode = function (data) {
-        var result;
-        var i = 0, keys = Object.keys(data);
-        for (var key in keys) {
-            result += key + "=" + data[key];
+        var result = "";
+        var keys = Object.keys(data);
+        for (var i = 0; i < keys.length; i++) {
+            result += keys[i] + "=" + data[keys[i]];
             if (i < keys.length - 1)
                 result += '&';
         }
@@ -407,34 +395,6 @@ var Utils = (function () {
     };
     return Utils;
 })();
-var JsonCmd = (function (_super) {
-    __extends(JsonCmd, _super);
-    function JsonCmd(url, method, data, query) {
-        _super.call(this);
-        this._client = new HttpClient();
-        // create envelope
-        this._client
-            .url(Url.api(url))
-            .method(method)
-            .query(Utils.urlEncode(query))
-            .body(JSON.stringify(data))
-            .header("Content-Type", "application/json")
-            .response(this.response);
-    }
-    JsonCmd.prototype.response = function (response) {
-        // deserealize and process envelope
-        var code;
-        if (code == 200)
-            this._done({});
-        else if (code != 500)
-            this._fail({});
-        this._always({});
-    };
-    JsonCmd.prototype.execute = function () {
-        this._client.call();
-    };
-    return JsonCmd;
-})(BaseCmd);
 var BaseCmd = (function () {
     function BaseCmd() {
         this._cbDefault = function (_) { };
@@ -458,6 +418,35 @@ var BaseCmd = (function () {
     };
     return BaseCmd;
 })();
+var JsonCmd = (function (_super) {
+    __extends(JsonCmd, _super);
+    function JsonCmd(url, method, data, query) {
+        _super.call(this);
+        this._client = new HttpClient();
+        // create envelope
+        this._client.url(Url.api(url));
+        this._client.method(method);
+        this._client.query(Utils.urlEncode(query));
+        if (data) {
+            this._client.body(JSON.stringify(data));
+            this._client.header("Content-Type", "application/json");
+        }
+        this._client.response(this.response);
+    }
+    JsonCmd.prototype.response = function (response) {
+        // deserealize and process envelope
+        var code;
+        if (code == 200)
+            this._done({});
+        else if (code != 500)
+            this._fail({});
+        this._always({});
+    };
+    JsonCmd.prototype.execute = function () {
+        this._client.call();
+    };
+    return JsonCmd;
+})(BaseCmd);
 var SyncCmd = (function (_super) {
     __extends(SyncCmd, _super);
     function SyncCmd(rev) {
@@ -466,7 +455,7 @@ var SyncCmd = (function (_super) {
     }
     SyncCmd.prototype.execute = function () {
         var _this = this;
-        new JsonCmd("/sync/index", HttpMethod.Get, undefined, { rev: this._rev })
+        new JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
             .done(function (result) {
             // update model
             _this._done(result);
@@ -476,7 +465,8 @@ var SyncCmd = (function (_super) {
         })
             .always(function (result) {
             _this._always(result);
-        });
+        })
+            .execute();
     };
     SyncCmd.prototype.doSync = function (result) {
         console.log('update model');
@@ -490,19 +480,13 @@ var SyncCmd = (function (_super) {
     };
     return SyncCmd;
 })(BaseCmd);
-///<reference path="ViewBase.ts"/>
-var Views;
-(function (Views) {
-    var TextBox = (function (_super) {
-        __extends(TextBox, _super);
-        function TextBox() {
-            _super.apply(this, arguments);
-        }
-        TextBox.prototype.render = function () {
-            _super.prototype.render.call(this);
-            this.$el.html("<input type=\"text\" value=\"asd\"></input>");
-        };
-        return TextBox;
-    })(Views.ViewBase);
-    Views.TextBox = TextBox;
-})(Views || (Views = {}));
+window.onload = function () {
+    var m = new Views.Main();
+    m.render();
+    $("#body").replaceWith(m.$el);
+    new SyncCmd(0)
+        .done(function () { return console.log('sync done'); })
+        .fail(function () { return console.log('sync fail'); })
+        .always(function () { return console.log('sync always'); })
+        .execute();
+};

@@ -1,3 +1,5 @@
+///<reference path="Entity.ts"/>
+
 module Client.Models {
 
   @model("models.User")

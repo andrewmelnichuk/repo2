@@ -179,7 +179,7 @@ namespace Server.Common.Data
 
     private static void ReadStorage()
     {
-      using (var stream = File.Open(FilePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read))
+      using (var stream = File.Open(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
       using (var reader = new StreamReader(stream)) {
         var serializer = new JsonSerializer();
         Storage = (Dictionary<int, T>) serializer.Deserialize(reader, typeof(Dictionary<int, T>)) ?? new Dictionary<int, T>(); 

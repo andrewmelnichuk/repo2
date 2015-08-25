@@ -1,4 +1,6 @@
 ///<reference path="ViewBase.ts"/>
+///<reference path="TextBox.ts"/>
+///<reference path="../typings/es6-promise/es6-promise.d.ts"/>
 
 module Views {
   
@@ -29,21 +31,9 @@ function Activator<T>(type: {new(): T}) : T {
   return new type();
 }
 
-window.onload = () => {
-  var m = new Views.Main();
-  m.render();
-  $("#body").replaceWith(m.$el);
-
-  var cmd = new SyncCmd(0)
-    .done(() => console.log('sync done'))
-    .fail(() => console.log('sync fail'))
-    .always(() => console.log('sync always'))
-
-};
-
 import User = Client.Models.User;
 
-enum HttpMethod {Get, Post};
+enum HttpMethod {GET, POST};
 enum HttpBodyFormat {UrlEncoded, Json};
 
 class HttpClient {
@@ -91,12 +81,13 @@ class HttpClient {
     if (this._query)
       url += '?' + this._query;
 
+    var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+
+    this._xhr.open(HttpMethod[this._method], url, true);
+
     for (var header in this._headers)
       this._xhr.setRequestHeader(header, this._headers[header]);
 
-    var body = (this._method != HttpMethod.Get) ? this._body : undefined;
-
-    this._xhr.open(HttpMethod[this._method], url, true);
     this._xhr.send(body);
   }
 
@@ -112,55 +103,21 @@ class Config {
 class Url {
   public static api (path: string): string {
     return (path.charAt(0) != '/')
-      ? '/' + Config.ApiUrl
-      : Config.ApiUrl;
+      ? Config.ApiUrl + '/' + path
+      : Config.ApiUrl + path;
   }
 }
 
 class Utils {
   public static urlEncode(data: Object): string {
-    var result: string;
-    var i = 0, keys = Object.keys(data);
-    for (var key in keys) {
-      result += key + "=" + data[key];
+    var result: string = "";
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+      result += keys[i] + "=" + data[keys[i]];
       if (i < keys.length - 1)
         result += '&';
     }
     return result;
-  }
-}
-
-class JsonCmd extends BaseCmd {
-
-  private _client = new HttpClient(); 
-
-
-  constructor(url: string, method: HttpMethod, data?: Object, query?: Object) {
-    super();
-    
-    // create envelope
-    
-    this._client
-        .url(Url.api(url))
-        .method(method)
-        .query(Utils.urlEncode(query))
-        .body(JSON.stringify(data))
-        .header("Content-Type", "application/json")
-        .response(this.response);
-  }
-
-  private response(response: any): void {
-    // deserealize and process envelope
-    var code;
-    if (code == 200)
-      this._done({});
-    else if (code != 500)
-      this._fail({});
-    this._always({});
-  }
-
-  public execute(): void {
-    this._client.call();
   }
 }
 
@@ -191,6 +148,42 @@ class BaseCmd {
   }
 }
 
+class JsonCmd extends BaseCmd {
+
+  private _client = new HttpClient(); 
+
+
+  constructor(url: string, method: HttpMethod, data?: Object, query?: Object) {
+    super();
+    
+    // create envelope
+    this._client.url(Url.api(url));
+    this._client.method(method);
+    this._client.query(Utils.urlEncode(query));
+
+    if (data) {
+      this._client.body(JSON.stringify(data));
+      this._client.header("Content-Type", "application/json");
+    }
+    
+    this._client.response(this.response);
+  }
+
+  private response(response: any): void {
+    // deserealize and process envelope
+    var code;
+    if (code == 200)
+      this._done({});
+    else if (code != 500)
+      this._fail({});
+    this._always({});
+  }
+
+  public execute(): void {
+    this._client.call();
+  }
+}
+
 class SyncCmd extends BaseCmd {
   private _rev: number;
 
@@ -200,7 +193,7 @@ class SyncCmd extends BaseCmd {
   }
 
   public execute() {
-    new JsonCmd("/sync/index", HttpMethod.Get, undefined, {rev: this._rev})
+    new JsonCmd("/sync/index", HttpMethod.GET, undefined, {rev: this._rev})
       .done(result => {
         // update model
         this._done(result);
@@ -210,7 +203,8 @@ class SyncCmd extends BaseCmd {
       })
       .always(result => {
         this._always(result);
-      });
+      })
+      .execute();
   }
 
   private doSync(result: any): void {
@@ -225,3 +219,15 @@ class SyncCmd extends BaseCmd {
     });
   }
 }
+
+window.onload = () => {
+  var m = new Views.Main();
+  m.render();
+  $("#body").replaceWith(m.$el);
+
+  new SyncCmd(0)
+    .done(() => console.log('sync done'))
+    .fail(() => console.log('sync fail'))
+    .always(() => console.log('sync always'))
+    .execute();
+};
