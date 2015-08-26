@@ -1,7 +1,7 @@
 module Client.Common {
-  
-  export enum HttpMethod {Get, Post};
-  
+
+  export enum HttpMethod {GET, POST};
+
   export class HttpClient {
     private _url: string;
     private _method: HttpMethod;
@@ -45,14 +45,15 @@ module Client.Common {
       var url = this._url;
   
       if (this._query)
-        url += '?' + this._query;
-  
+      url += '?' + this._query;
+
+      var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+
+      this._xhr.open(HttpMethod[this._method], url, true);
+
       for (var header in this._headers)
         this._xhr.setRequestHeader(header, this._headers[header]);
-  
-      var body = (this._method != HttpMethod.Get) ? this._body : undefined;
-  
-      this._xhr.open(HttpMethod[this._method], url, true);
+
       this._xhr.send(body);
       // TODO add response callback
     }

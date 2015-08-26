@@ -1,3 +1,24 @@
+var Config = (function () {
+    function Config() {
+    }
+    Object.defineProperty(Config, "apiUrl", {
+        get: function () {
+            return this.cfg.apiUrl;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Config, "cfg", {
+        get: function () {
+            if (!window.hasOwnProperty("config"))
+                throw new Error("Configuration not found");
+            return window["config"];
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Config;
+})();
 function model(eventsChannel) {
     return function (target) {
         target["eventsChannel"] = eventsChannel;
@@ -22,10 +43,199 @@ function property(target, property) {
         });
     }
 }
+var Url = (function () {
+    function Url() {
+    }
+    Url.api = function (path) {
+        return (path.charAt(0) != '/')
+            ? Config.apiUrl + '/' + path
+            : Config.apiUrl + path;
+    };
+    return Url;
+})();
+var Utils = (function () {
+    function Utils() {
+    }
+    Utils.urlEncode = function (data) {
+        var result = "";
+        var keys = Object.keys(data);
+        for (var i = 0; i < keys.length; i++) {
+            result += keys[i] + "=" + data[keys[i]];
+            if (i < keys.length - 1)
+                result += '&';
+        }
+        return result;
+    };
+    return Utils;
+})();
 var a;
 // a = new Date();
 a = 1;
 a = "string";
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var BaseCmd = (function () {
+            function BaseCmd() {
+                this._cbDefault = function (_) { };
+                this._done = this._cbDefault;
+                this._fail = this._cbDefault;
+                this._always = this._cbDefault;
+            }
+            BaseCmd.prototype.done = function (callback) {
+                this._done = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.fail = function (callback) {
+                this._fail = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.always = function (callback) {
+                this._always = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.execute = function () {
+            };
+            return BaseCmd;
+        })();
+        Commands.BaseCmd = BaseCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        (function (HttpMethod) {
+            HttpMethod[HttpMethod["GET"] = 0] = "GET";
+            HttpMethod[HttpMethod["POST"] = 1] = "POST";
+        })(Common.HttpMethod || (Common.HttpMethod = {}));
+        var HttpMethod = Common.HttpMethod;
+        ;
+        var HttpClient = (function () {
+            function HttpClient(url) {
+                this._headers = {};
+                this._xhr = new XMLHttpRequest();
+                if (url)
+                    this._url = url;
+            }
+            HttpClient.prototype.url = function (url) {
+                this._url = url;
+                return this;
+            };
+            HttpClient.prototype.query = function (query) {
+                this._query = query;
+                return this;
+            };
+            HttpClient.prototype.header = function (name, value) {
+                this._headers[name] = value;
+                return this;
+            };
+            HttpClient.prototype.body = function (data) {
+                this._body = data;
+                return this;
+            };
+            HttpClient.prototype.method = function (method) {
+                this._method = method;
+                return this;
+            };
+            HttpClient.prototype.call = function () {
+                var url = this._url;
+                if (this._query)
+                    url += '?' + this._query;
+                var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+                this._xhr.open(HttpMethod[this._method], url, true);
+                for (var header in this._headers)
+                    this._xhr.setRequestHeader(header, this._headers[header]);
+                this._xhr.send(body);
+                // TODO add response callback
+            };
+            HttpClient.prototype.response = function (callback) {
+                return this;
+            };
+            return HttpClient;
+        })();
+        Common.HttpClient = HttpClient;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
+///<reference path="../Common/HttpClient.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpClient = Client.Common.HttpClient;
+        var JsonCmd = (function (_super) {
+            __extends(JsonCmd, _super);
+            function JsonCmd(url, method, data, query) {
+                _super.call(this);
+                this._client = new HttpClient();
+                // create envelope
+                this._client.url(Url.api(url));
+                this._client.method(method);
+                this._client.query(Utils.urlEncode(query));
+                if (data) {
+                    this._client.body(JSON.stringify(data));
+                    this._client.header("Content-Type", "application/json");
+                }
+                this._client.response(this.response);
+            }
+            JsonCmd.prototype.response = function (response) {
+                // deserealize and process envelope
+                var code;
+                if (code == 200)
+                    this._done({});
+                else if (code != 500)
+                    this._fail({});
+                this._always({});
+            };
+            JsonCmd.prototype.execute = function () {
+                this._client.call();
+            };
+            return JsonCmd;
+        })(Commands.BaseCmd);
+        Commands.JsonCmd = JsonCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpMethod = Client.Common.HttpMethod;
+        var SyncCmd = (function (_super) {
+            __extends(SyncCmd, _super);
+            function SyncCmd(rev) {
+                _super.call(this);
+                this._rev = rev;
+            }
+            SyncCmd.prototype.execute = function () {
+                var _this = this;
+                new Commands.JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
+                    .done(function (result) {
+                    // update model
+                    _this._done(result);
+                })
+                    .fail(function (result) {
+                    _this._fail(result);
+                })
+                    .always(function (result) {
+                    _this._always(result);
+                })
+                    .execute();
+            };
+            SyncCmd.prototype.doSync = function (result) {
+                console.log('update model');
+            };
+            return SyncCmd;
+        })(Commands.BaseCmd);
+        Commands.SyncCmd = SyncCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Common;
@@ -137,12 +347,6 @@ var Client;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
 ///<reference path="Entity.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -280,7 +484,6 @@ var Views;
 })(Views || (Views = {}));
 ///<reference path="ViewBase.ts"/>
 ///<reference path="TextBox.ts"/>
-///<reference path="../typings/es6-promise/es6-promise.d.ts"/>
 var Views;
 (function (Views) {
     var Main = (function (_super) {
@@ -309,182 +512,11 @@ var Views;
 function Activator(type) {
     return new type();
 }
-var User = Client.Models.User;
-var HttpMethod;
-(function (HttpMethod) {
-    HttpMethod[HttpMethod["GET"] = 0] = "GET";
-    HttpMethod[HttpMethod["POST"] = 1] = "POST";
-})(HttpMethod || (HttpMethod = {}));
-;
-var HttpBodyFormat;
-(function (HttpBodyFormat) {
-    HttpBodyFormat[HttpBodyFormat["UrlEncoded"] = 0] = "UrlEncoded";
-    HttpBodyFormat[HttpBodyFormat["Json"] = 1] = "Json";
-})(HttpBodyFormat || (HttpBodyFormat = {}));
-;
-var HttpClient = (function () {
-    function HttpClient(url) {
-        this._headers = {};
-        this._xhr = new XMLHttpRequest();
-        if (url)
-            this._url = url;
-    }
-    HttpClient.prototype.url = function (url) {
-        this._url = url;
-        return this;
-    };
-    HttpClient.prototype.query = function (query) {
-        this._query = query;
-        return this;
-    };
-    HttpClient.prototype.header = function (name, value) {
-        this._headers[name] = value;
-        return this;
-    };
-    HttpClient.prototype.body = function (data) {
-        this._body = data;
-        return this;
-    };
-    HttpClient.prototype.method = function (method) {
-        this._method = method;
-        return this;
-    };
-    HttpClient.prototype.call = function () {
-        var url = this._url;
-        if (this._query)
-            url += '?' + this._query;
-        var body = (this._method != HttpMethod.GET) ? this._body : undefined;
-        this._xhr.open(HttpMethod[this._method], url, true);
-        for (var header in this._headers)
-            this._xhr.setRequestHeader(header, this._headers[header]);
-        this._xhr.send(body);
-    };
-    HttpClient.prototype.response = function (callback) {
-        return this;
-    };
-    return HttpClient;
-})();
-var Config = (function () {
-    function Config() {
-    }
-    Config.ApiUrl = "http://localhost:5004/api";
-    return Config;
-})();
-var Url = (function () {
-    function Url() {
-    }
-    Url.api = function (path) {
-        return (path.charAt(0) != '/')
-            ? Config.ApiUrl + '/' + path
-            : Config.ApiUrl + path;
-    };
-    return Url;
-})();
-var Utils = (function () {
-    function Utils() {
-    }
-    Utils.urlEncode = function (data) {
-        var result = "";
-        var keys = Object.keys(data);
-        for (var i = 0; i < keys.length; i++) {
-            result += keys[i] + "=" + data[keys[i]];
-            if (i < keys.length - 1)
-                result += '&';
-        }
-        return result;
-    };
-    return Utils;
-})();
-var BaseCmd = (function () {
-    function BaseCmd() {
-        this._cbDefault = function (_) { };
-        this._done = this._cbDefault;
-        this._fail = this._cbDefault;
-        this._always = this._cbDefault;
-    }
-    BaseCmd.prototype.done = function (callback) {
-        this._done = callback || this._cbDefault;
-        return this;
-    };
-    BaseCmd.prototype.fail = function (callback) {
-        this._fail = callback || this._cbDefault;
-        return this;
-    };
-    BaseCmd.prototype.always = function (callback) {
-        this._always = callback || this._cbDefault;
-        return this;
-    };
-    BaseCmd.prototype.execute = function () {
-    };
-    return BaseCmd;
-})();
-var JsonCmd = (function (_super) {
-    __extends(JsonCmd, _super);
-    function JsonCmd(url, method, data, query) {
-        _super.call(this);
-        this._client = new HttpClient();
-        // create envelope
-        this._client.url(Url.api(url));
-        this._client.method(method);
-        this._client.query(Utils.urlEncode(query));
-        if (data) {
-            this._client.body(JSON.stringify(data));
-            this._client.header("Content-Type", "application/json");
-        }
-        this._client.response(this.response);
-    }
-    JsonCmd.prototype.response = function (response) {
-        // deserealize and process envelope
-        var code;
-        if (code == 200)
-            this._done({});
-        else if (code != 500)
-            this._fail({});
-        this._always({});
-    };
-    JsonCmd.prototype.execute = function () {
-        this._client.call();
-    };
-    return JsonCmd;
-})(BaseCmd);
-var SyncCmd = (function (_super) {
-    __extends(SyncCmd, _super);
-    function SyncCmd(rev) {
-        _super.call(this);
-        this._rev = rev;
-    }
-    SyncCmd.prototype.execute = function () {
-        var _this = this;
-        new JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
-            .done(function (result) {
-            // update model
-            _this._done(result);
-        })
-            .fail(function (result) {
-            _this._fail(result);
-        })
-            .always(function (result) {
-            _this._always(result);
-        })
-            .execute();
-    };
-    SyncCmd.prototype.doSync = function (result) {
-        console.log('update model');
-    };
-    SyncCmd.get = function (id) {
-        return new Promise(function (resolve, reject) {
-            $.getJSON("http://localhost:5004/api/users/1")
-                .done(function (result) { return resolve(User.fromJson(result)); })
-                .fail(function (result) { return reject(result); });
-        });
-    };
-    return SyncCmd;
-})(BaseCmd);
 window.onload = function () {
     var m = new Views.Main();
     m.render();
     $("#body").replaceWith(m.$el);
-    new SyncCmd(0)
+    new Client.Commands.SyncCmd(0)
         .done(function () { return console.log('sync done'); })
         .fail(function () { return console.log('sync fail'); })
         .always(function () { return console.log('sync always'); })

@@ -1,23 +1,28 @@
+///<reference path="../Common/HttpClient.ts"/>
+
 module Client.Commands {
-  
+
   import HttpClient = Client.Common.HttpClient;
   import HttpMethod = Client.Common.HttpMethod;
-  
+
   export class JsonCmd extends BaseCmd {
-    private _client = new HttpClient();
-  
+
+    private _client = new HttpClient(); 
+
     constructor(url: string, method: HttpMethod, data?: Object, query?: Object) {
       super();
-  
+      
       // create envelope
+      this._client.url(Url.api(url));
+      this._client.method(method);
+      this._client.query(Utils.urlEncode(query));
   
-      this._client
-          .url(Utils.apiUrl(url))
-          .method(method)
-          .query(Utils.toQueryString(query))
-          .body(JSON.stringify(data))
-          .header("Content-Type", "application/json")
-          .response(this.response);
+      if (data) {
+        this._client.body(JSON.stringify(data));
+        this._client.header("Content-Type", "application/json");
+      }
+      
+      this._client.response(this.response);
     }
   
     private response(response: any): void {
