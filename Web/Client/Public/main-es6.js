@@ -1,3 +1,13 @@
+class Config {
+    static get apiUrl() {
+        return this.cfg.apiUrl;
+    }
+    static get cfg() {
+        if (!window.hasOwnProperty("config"))
+            throw new Error("Configuration not found");
+        return window["config"];
+    }
+}
 function model(eventsChannel) {
     return (target) => {
         target["eventsChannel"] = eventsChannel;
@@ -22,10 +32,182 @@ function property(target, property) {
         });
     }
 }
+class Utils {
+    static toQueryString(data) {
+        var result;
+        var i = 0, keys = Object.keys(data);
+        for (var key in keys) {
+            result += key + "=" + data[key];
+            if (i < keys.length - 1)
+                result += '&';
+        }
+        return result;
+    }
+    static apiUrl(path) {
+        return (path.charAt(0) != '/')
+            ? '/' + Config.apiUrl
+            : Config.apiUrl;
+    }
+}
 var a;
 // a = new Date();
 a = 1;
 a = "string";
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        class BaseCmd {
+            constructor() {
+                this._cbDefault = _ => { };
+                this._done = this._cbDefault;
+                this._fail = this._cbDefault;
+                this._always = this._cbDefault;
+            }
+            done(callback) {
+                this._done = callback || this._cbDefault;
+                return this;
+            }
+            fail(callback) {
+                this._fail = callback || this._cbDefault;
+                return this;
+            }
+            always(callback) {
+                this._always = callback || this._cbDefault;
+                return this;
+            }
+            execute() {
+            }
+        }
+        Commands.BaseCmd = BaseCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpClient = Client.Common.HttpClient;
+        class JsonCmd extends Commands.BaseCmd {
+            constructor(url, method, data, query) {
+                super();
+                this._client = new HttpClient();
+                // create envelope
+                this._client
+                    .url(Utils.apiUrl(url))
+                    .method(method)
+                    .query(Utils.toQueryString(query))
+                    .body(JSON.stringify(data))
+                    .header("Content-Type", "application/json")
+                    .response(this.response);
+            }
+            response(response) {
+                // deserealize and process envelope
+                var code;
+                if (code == 200)
+                    this._done({});
+                else if (code != 500)
+                    this._fail({});
+                this._always({});
+            }
+            execute() {
+                this._client.call();
+            }
+        }
+        Commands.JsonCmd = JsonCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpMethod = Client.Common.HttpMethod;
+        class SyncCmd extends Commands.BaseCmd {
+            constructor(rev) {
+                super();
+                this._rev = rev;
+            }
+            execute() {
+                new Commands.JsonCmd("/sync/index", HttpMethod.Get, undefined, { rev: this._rev })
+                    .done(result => {
+                    // update model
+                    this._done(result);
+                })
+                    .fail(result => {
+                    this._fail(result);
+                })
+                    .always(result => {
+                    this._always(result);
+                });
+            }
+            doSync(result) {
+                console.log('update model');
+            }
+            static get(id) {
+                return new Promise((resolve, reject) => {
+                    $.getJSON("http://localhost:5004/api/users/1")
+                        .done(result => resolve(User.fromJson(result)))
+                        .fail(result => reject(result));
+                });
+            }
+        }
+        Commands.SyncCmd = SyncCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        (function (HttpMethod) {
+            HttpMethod[HttpMethod["Get"] = 0] = "Get";
+            HttpMethod[HttpMethod["Post"] = 1] = "Post";
+        })(Common.HttpMethod || (Common.HttpMethod = {}));
+        var HttpMethod = Common.HttpMethod;
+        ;
+        class HttpClient {
+            constructor(url) {
+                this._headers = {};
+                this._xhr = new XMLHttpRequest();
+                if (url)
+                    this._url = url;
+            }
+            url(url) {
+                this._url = url;
+                return this;
+            }
+            query(query) {
+                this._query = query;
+                return this;
+            }
+            header(name, value) {
+                this._headers[name] = value;
+                return this;
+            }
+            body(data) {
+                this._body = data;
+                return this;
+            }
+            method(method) {
+                this._method = method;
+                return this;
+            }
+            call() {
+                var url = this._url;
+                if (this._query)
+                    url += '?' + this._query;
+                for (var header in this._headers)
+                    this._xhr.setRequestHeader(header, this._headers[header]);
+                var body = (this._method != HttpMethod.Get) ? this._body : undefined;
+                this._xhr.open(HttpMethod[this._method], url, true);
+                this._xhr.send(body);
+                // TODO add response callback
+            }
+            response(callback) {
+                return this;
+            }
+        }
+        Common.HttpClient = HttpClient;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Common;
@@ -269,19 +451,12 @@ window.onload = () => {
     var m = new Views.Main();
     m.render();
     $("#body").replaceWith(m.$el);
-    setTimeout(() => m.destroy(), 3000);
-    UserMgr.get(1).then(user => console.log(user));
+    var cmd = new Client.Commands.SyncCmd(0)
+        .done(() => console.log('sync done'))
+        .fail(() => console.log('sync fail'))
+        .always(() => console.log('sync always'));
 };
 var User = Client.Models.User;
-class UserMgr {
-    static get(id) {
-        return new Promise((resolve, reject) => {
-            $.getJSON("http://localhost:5004/api/users/1")
-                .done(result => resolve(User.fromJson(result)))
-                .fail(result => { });
-        });
-    }
-}
 ///<reference path="ViewBase.ts"/>
 var Views;
 (function (Views) {
