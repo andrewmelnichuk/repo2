@@ -3,7 +3,7 @@
 ///<reference path="../typings/es6-promise/es6-promise.d.ts"/>
 
 module Views {
-  
+
   export class Main extends ViewBase {
     
     private _tbName: TextBox = new TextBox(this);
