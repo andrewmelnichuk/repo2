@@ -1,5 +1,8 @@
+using System;
 using Microsoft.AspNet.Builder;
 using Microsoft.Framework.DependencyInjection;
+using NLog;
+using NLog.Config;
 
 namespace HelloMvc
 {
@@ -19,6 +22,8 @@ namespace HelloMvc
       });
 
       app.UseWelcomePage();
+
+      LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");      
     }
   }
 }

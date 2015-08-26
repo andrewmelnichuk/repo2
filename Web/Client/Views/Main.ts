@@ -1,7 +1,8 @@
 ///<reference path="ViewBase.ts"/>
+///<reference path="TextBox.ts"/>
 
 module Views {
-  
+
   export class Main extends ViewBase {
     
     private _tbName: TextBox = new TextBox(this);
@@ -34,20 +35,9 @@ window.onload = () => {
   m.render();
   $("#body").replaceWith(m.$el);
 
-  var cmd = new Client.Commands.SyncCmd(0)
+  new Client.Commands.SyncCmd(0)
     .done(() => console.log('sync done'))
     .fail(() => console.log('sync fail'))
     .always(() => console.log('sync always'))
+    .execute();
 };
-
-import User = Client.Models.User;
-
-
-
-
-
-
-
-
-
-

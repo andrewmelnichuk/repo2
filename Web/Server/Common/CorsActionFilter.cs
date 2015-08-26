@@ -6,7 +6,10 @@ namespace Server.Common
   {
     public override void OnActionExecuted(ActionExecutedContext context) 
     {
-      context.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", new[] {"*"});
+      var headers = context.HttpContext.Response.Headers; 
+      headers.Add("Access-Control-Allow-Origin", new[] {"*"});
+      headers.Add("Access-Control-Allow-Headers", new[] {"Origin", "X-Requested-With", "Content-Type", "Accept"});
+      headers.Add("Access-Control-Allow-Methods", new[] {"GET", "POST", "PUT"});
     }
   }
 }
