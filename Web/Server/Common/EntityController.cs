@@ -6,7 +6,7 @@ using NLog;
 
 namespace Server.Common
 {
-    [CorsEnabled]
+  [CorsEnabled]
   [Route("api/[controller]")]
   public class EntityController<TEntity, TValidator> : Controller 
     where TEntity : Entity
