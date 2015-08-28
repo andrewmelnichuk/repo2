@@ -19,12 +19,19 @@ namespace Server.Common.Changes
         .ToList();
     }
 
-    public static List<Entity> GetChanges(long revision)
+    public static ChangesResult GetChanges(long revision)
     {
-      var result = new List<Entity>();
-      foreach (var provider in _changeProviders)
-        result.AddRange(provider.GetChanges(revision));
+      var result = new ChangesResult();
+      foreach (var provider in _changeProviders) {
+        var changes = provider.GetChanges(revision);
+        if (changes.Count > 0)
+          result.Add(provider.EntityType, changes);
+      }
       return result;
     }
+  }
+  
+  public class ChangesResult : Dictionary<string, List<Entity>>
+  {
   }
 }

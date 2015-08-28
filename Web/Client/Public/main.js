@@ -68,330 +68,6 @@ var Utils = (function () {
     };
     return Utils;
 })();
-var a;
-// a = new Date();
-a = 1;
-a = "string";
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var BaseCmd = (function () {
-            function BaseCmd() {
-                this._cbDefault = function (_) { };
-                this._done = this._cbDefault;
-                this._fail = this._cbDefault;
-                this._always = this._cbDefault;
-            }
-            BaseCmd.prototype.done = function (callback) {
-                this._done = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.fail = function (callback) {
-                this._fail = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.always = function (callback) {
-                this._always = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.execute = function () {
-            };
-            return BaseCmd;
-        })();
-        Commands.BaseCmd = BaseCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Common;
-    (function (Common) {
-        (function (HttpMethod) {
-            HttpMethod[HttpMethod["GET"] = 0] = "GET";
-            HttpMethod[HttpMethod["POST"] = 1] = "POST";
-        })(Common.HttpMethod || (Common.HttpMethod = {}));
-        var HttpMethod = Common.HttpMethod;
-        ;
-        var HttpClient = (function () {
-            function HttpClient(url) {
-                this._headers = {};
-                this._xhr = new XMLHttpRequest();
-                if (url)
-                    this._url = url;
-            }
-            HttpClient.prototype.url = function (url) {
-                this._url = url;
-                return this;
-            };
-            HttpClient.prototype.query = function (query) {
-                this._query = query;
-                return this;
-            };
-            HttpClient.prototype.header = function (name, value) {
-                this._headers[name] = value;
-                return this;
-            };
-            HttpClient.prototype.body = function (data) {
-                this._body = data;
-                return this;
-            };
-            HttpClient.prototype.method = function (method) {
-                this._method = method;
-                return this;
-            };
-            HttpClient.prototype.call = function () {
-                var url = this._url;
-                if (this._query)
-                    url += '?' + this._query;
-                var body = (this._method != HttpMethod.GET) ? this._body : undefined;
-                this._xhr.open(HttpMethod[this._method], url, true);
-                for (var header in this._headers)
-                    this._xhr.setRequestHeader(header, this._headers[header]);
-                this._xhr.send(body);
-                // TODO add response callback
-            };
-            HttpClient.prototype.response = function (callback) {
-                return this;
-            };
-            return HttpClient;
-        })();
-        Common.HttpClient = HttpClient;
-    })(Common = Client.Common || (Client.Common = {}));
-})(Client || (Client = {}));
-///<reference path="../Common/HttpClient.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var HttpClient = Client.Common.HttpClient;
-        var JsonCmd = (function (_super) {
-            __extends(JsonCmd, _super);
-            function JsonCmd(url, method, data, query) {
-                _super.call(this);
-                this._client = new HttpClient();
-                // create envelope
-                this._client.url(Url.api(url));
-                this._client.method(method);
-                this._client.query(Utils.urlEncode(query));
-                if (data) {
-                    this._client.body(JSON.stringify(data));
-                    this._client.header("Content-Type", "application/json");
-                }
-                this._client.response(this.response);
-            }
-            JsonCmd.prototype.response = function (response) {
-                // deserealize and process envelope
-                var code;
-                if (code == 200)
-                    this._done({});
-                else if (code != 500)
-                    this._fail({});
-                this._always({});
-            };
-            JsonCmd.prototype.execute = function () {
-                this._client.call();
-            };
-            return JsonCmd;
-        })(Commands.BaseCmd);
-        Commands.JsonCmd = JsonCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var HttpMethod = Client.Common.HttpMethod;
-        var SyncCmd = (function (_super) {
-            __extends(SyncCmd, _super);
-            function SyncCmd(rev) {
-                _super.call(this);
-                this._rev = rev;
-            }
-            SyncCmd.prototype.execute = function () {
-                var _this = this;
-                new Commands.JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
-                    .done(function (result) {
-                    // update model
-                    _this._done(result);
-                })
-                    .fail(function (result) {
-                    _this._fail(result);
-                })
-                    .always(function (result) {
-                    _this._always(result);
-                })
-                    .execute();
-            };
-            SyncCmd.prototype.doSync = function (result) {
-                console.log('update model');
-            };
-            return SyncCmd;
-        })(Commands.BaseCmd);
-        Commands.SyncCmd = SyncCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Common;
-    (function (Common) {
-        var Repository = (function () {
-            function Repository(url) {
-                this._storage = {};
-                this._url = url;
-            }
-            Repository.prototype.get = function (id) {
-                var _this = this;
-                var entity = this._storage[id];
-                return new Promise(function (resolve, reject) {
-                    if (entity)
-                        resolve(entity);
-                    else
-                        $.get(_this._url).done(function () { return resolve(null); });
-                });
-            };
-            Repository.prototype.get2 = function () {
-                this.get(1).then(function (value) { return console.log(value); }, function (error) { return console.log("error"); });
-            };
-            return Repository;
-        })();
-        Common.Repository = Repository;
-    })(Common = Client.Common || (Client.Common = {}));
-})(Client || (Client = {}));
-var DataAccess;
-(function (DataAccess) {
-    var Products = (function () {
-        function Products() {
-        }
-        Products.prototype.Save = function () {
-            console.log("Product save.");
-        };
-        return Products;
-    })();
-    DataAccess.Products = Products;
-})(DataAccess || (DataAccess = {}));
-var Events;
-(function (Events) {
-    var EventBus = (function () {
-        function EventBus() {
-            this._handlers = {};
-        }
-        Object.defineProperty(EventBus, "Instance", {
-            get: function () {
-                return (!EventBus._instance)
-                    ? (EventBus._instance = new EventBus())
-                    : EventBus._instance;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        EventBus.prototype.on = function (channel, event, ctx, callback) {
-            this._handlers[channel] = this._handlers[channel] || {};
-            this._handlers[channel][event] = this._handlers[channel][event] || new Array();
-            this._handlers[channel][event].push({ ctx: ctx, callback: callback });
-        };
-        EventBus.prototype.off = function (channel, event, ctx, callback) {
-            var handlers = (this._handlers[channel] || {})[event];
-            if (!handlers)
-                return;
-            for (var i = 0; i < handlers.length; i++) {
-                if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
-                    handlers.splice(i, 1);
-                    break;
-                }
-            }
-        };
-        EventBus.prototype.fire = function (channel, event) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            var handlers = (this._handlers[channel] || {})[event];
-            if (handlers)
-                handlers.forEach(function (handler) { return handler.callback.call(handler.ctx, args); });
-            else
-                console.log("handlers for channel '%s', event '%s' not found", channel, event);
-        };
-        return EventBus;
-    })();
-    Events.EventBus = EventBus;
-})(Events || (Events = {}));
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var Data = (function () {
-            function Data() {
-            }
-            Data.Users = {};
-            return Data;
-        })();
-        Models.Data = Data;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var Entity = (function () {
-            function Entity() {
-            }
-            return Entity;
-        })();
-        Models.Entity = Entity;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
-///<reference path="Entity.ts"/>
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
-};
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var User = (function (_super) {
-            __extends(User, _super);
-            function User() {
-                _super.apply(this, arguments);
-            }
-            User.fromJson = function (json) {
-                var u = new User();
-                u.login = json.Login;
-                u.password = json.Password;
-                u.firstName = json.FirstName;
-                u.lastName = json.LastName;
-                return u;
-            };
-            __decorate([
-                property
-            ], User.prototype, "login");
-            __decorate([
-                property
-            ], User.prototype, "password");
-            __decorate([
-                property
-            ], User.prototype, "firstName");
-            __decorate([
-                property
-            ], User.prototype, "lastName");
-            User = __decorate([
-                model("models.User")
-            ], User);
-            return User;
-        })(Models.Entity);
-        Models.User = User;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
 var Views;
 (function (Views) {
     var ViewBase = (function () {
@@ -467,6 +143,12 @@ var Views;
     Views.ViewBase = ViewBase;
 })(Views || (Views = {}));
 ///<reference path="ViewBase.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var Views;
 (function (Views) {
     var TextBox = (function (_super) {
@@ -482,7 +164,405 @@ var Views;
     })(Views.ViewBase);
     Views.TextBox = TextBox;
 })(Views || (Views = {}));
-///<reference path="ViewBase.ts"/>
+///<reference path="Views/ViewBase.ts"/>
+///<reference path="Views/TextBox.ts"/> 
+var a;
+// a = new Date();
+a = 1;
+a = "string";
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var BaseCmd = (function () {
+            function BaseCmd() {
+                this._cbDefault = function (_) { };
+                this._done = this._cbDefault;
+                this._fail = this._cbDefault;
+                this._always = this._cbDefault;
+            }
+            BaseCmd.prototype.done = function (callback) {
+                this._done = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.fail = function (callback) {
+                this._fail = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.always = function (callback) {
+                this._always = callback || this._cbDefault;
+                return this;
+            };
+            BaseCmd.prototype.execute = function () {
+            };
+            return BaseCmd;
+        })();
+        Commands.BaseCmd = BaseCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        (function (HttpMethod) {
+            HttpMethod[HttpMethod["GET"] = 0] = "GET";
+            HttpMethod[HttpMethod["POST"] = 1] = "POST";
+        })(Common.HttpMethod || (Common.HttpMethod = {}));
+        var HttpMethod = Common.HttpMethod;
+        ;
+        var HttpClient = (function () {
+            function HttpClient(url) {
+                this._headers = {};
+                this._callbacks = {};
+                this._xhr = new XMLHttpRequest();
+                if (url)
+                    this._url = url;
+            }
+            HttpClient.prototype.url = function (url) {
+                this._url = url;
+                return this;
+            };
+            HttpClient.prototype.query = function (query) {
+                this._query = query;
+                return this;
+            };
+            HttpClient.prototype.header = function (name, value) {
+                this._headers[name] = value;
+                return this;
+            };
+            HttpClient.prototype.body = function (data) {
+                this._body = data;
+                return this;
+            };
+            HttpClient.prototype.method = function (method) {
+                this._method = method;
+                return this;
+            };
+            HttpClient.prototype.call2 = function (callback) {
+            };
+            HttpClient.prototype.call = function (callbacks) {
+                var url = this._url;
+                if (this._query)
+                    url += '?' + this._query;
+                var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+                // this._xhr.onreadystatechange = (e: ProgressEvent) => {
+                //   if (this._xhr.status == 200 && this._xhr.readyState == 4)
+                //     callback(this._xhr.responseText);
+                // };
+                this._xhr.open(HttpMethod[this._method], url, true);
+                for (var header in this._headers)
+                    this._xhr.setRequestHeader(header, this._headers[header]);
+                this._xhr.send(body);
+                // TODO add response callback
+            };
+            return HttpClient;
+        })();
+        Common.HttpClient = HttpClient;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
+///<reference path="../Common/HttpClient.ts"/>
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpClient = Client.Common.HttpClient;
+        var JsonCmd = (function (_super) {
+            __extends(JsonCmd, _super);
+            function JsonCmd(url, method, data, query) {
+                _super.call(this);
+                this._client = new HttpClient();
+                // create envelope
+                this._client.url(Url.api(url));
+                this._client.method(method);
+                this._client.query(Utils.urlEncode(query));
+                if (data) {
+                    this._client.body(JSON.stringify(data));
+                    this._client.header("Content-Type", "application/json");
+                }
+            }
+            JsonCmd.prototype.execute = function () {
+                //this._client.call(this.response);
+            };
+            JsonCmd.prototype.response = function (body) {
+                // deserealize and process envelope
+                console.log(body);
+                // var code;
+                // if (code == 200)
+                //   this._done({});
+                // else if (code != 500)
+                //   this._fail({});
+                // this._always({});
+            };
+            return JsonCmd;
+        })(Commands.BaseCmd);
+        Commands.JsonCmd = JsonCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Commands;
+    (function (Commands) {
+        var HttpMethod = Client.Common.HttpMethod;
+        var SyncCmd = (function (_super) {
+            __extends(SyncCmd, _super);
+            function SyncCmd(rev) {
+                _super.call(this);
+                this._rev = rev;
+            }
+            SyncCmd.prototype.execute = function () {
+                var _this = this;
+                new Commands.JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
+                    .done(function (result) {
+                    // update model
+                    _this._done(result);
+                })
+                    .fail(function (result) {
+                    _this._fail(result);
+                })
+                    .always(function (result) {
+                    _this._always(result);
+                })
+                    .execute();
+            };
+            SyncCmd.prototype.doSync = function (result) {
+                console.log('update model');
+            };
+            return SyncCmd;
+        })(Commands.BaseCmd);
+        Commands.SyncCmd = SyncCmd;
+    })(Commands = Client.Commands || (Client.Commands = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var Entity = (function () {
+            function Entity() {
+            }
+            return Entity;
+        })();
+        Models.Entity = Entity;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="Entity.ts"/>
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
+    switch (arguments.length) {
+        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
+        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
+        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
+    }
+};
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var User = (function (_super) {
+            __extends(User, _super);
+            function User() {
+                _super.apply(this, arguments);
+            }
+            User.fromJson = function (json) {
+                var u = new User();
+                u.login = json.Login;
+                u.password = json.Password;
+                u.firstName = json.FirstName;
+                u.lastName = json.LastName;
+                return u;
+            };
+            __decorate([
+                property
+            ], User.prototype, "login");
+            __decorate([
+                property
+            ], User.prototype, "password");
+            __decorate([
+                property
+            ], User.prototype, "firstName");
+            __decorate([
+                property
+            ], User.prototype, "lastName");
+            User = __decorate([
+                model("models.User")
+            ], User);
+            return User;
+        })(Models.Entity);
+        Models.User = User;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="Entity.ts"/>
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var App = (function (_super) {
+            __extends(App, _super);
+            function App() {
+                _super.apply(this, arguments);
+            }
+            App.fromJson = function (json) {
+                var app = new App();
+                app.name = json.name;
+                app.code = json.code;
+                app.internalId = json.internalId;
+                return app;
+            };
+            __decorate([
+                property
+            ], App.prototype, "name");
+            __decorate([
+                property
+            ], App.prototype, "code");
+            __decorate([
+                property
+            ], App.prototype, "internalId");
+            App = __decorate([
+                model("models.App")
+            ], App);
+            return App;
+        })(Models.Entity);
+        Models.App = App;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="../Models/User.ts" />
+///<reference path="../Models/App.ts" />
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        var Repository = (function () {
+            function Repository(url) {
+                this._storage = {};
+                this._url = url;
+            }
+            Repository.prototype.get = function (id) {
+                var _this = this;
+                var entity = this._storage[id];
+                return new Promise(function (resolve, reject) {
+                    if (entity)
+                        resolve(entity);
+                    else
+                        $.get(_this._url).done(function () { return resolve(null); });
+                });
+            };
+            Repository.prototype.get2 = function (int) {
+                this.get(1).then(function (value) { return console.log(value); }, function (error) { return console.log("error"); });
+            };
+            return Repository;
+        })();
+        Common.Repository = Repository;
+        var User = Client.Models.User;
+        var App = Client.Models.App;
+        var Resource = (function () {
+            function Resource(url, fromJson) {
+                this._url = Url.api(url);
+                this._fromJson = fromJson;
+            }
+            Resource.prototype.getAll = function () {
+                var _this = this;
+                return new Promise(function (resolve, reject) {
+                    $.getJSON(_this._url)
+                        .then(function (data) { })
+                        .fail(function (error) { });
+                });
+            };
+            Resource.prototype.get = function (id) {
+                var _this = this;
+                return new Promise(function (resolve, reject) {
+                    $.getJSON(_this._url + "/" + id)
+                        .then(function (data) { return resolve(_this._fromJson(data)); })
+                        .fail(function (error) { return reject(error); });
+                });
+            };
+            Resource.prototype.post = function (entity) {
+                return new Promise(function (resolve, reject) {
+                });
+            };
+            return Resource;
+        })();
+        Common.Resource = Resource;
+        var Api = (function () {
+            function Api() {
+            }
+            Api.Users = new Resource("/users", User.fromJson);
+            Api.Apps = new Resource("/apps", App.fromJson);
+            return Api;
+        })();
+        Common.Api = Api;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
+var DataAccess;
+(function (DataAccess) {
+    var Products = (function () {
+        function Products() {
+        }
+        Products.prototype.Save = function () {
+            console.log("Product save.");
+        };
+        return Products;
+    })();
+    DataAccess.Products = Products;
+})(DataAccess || (DataAccess = {}));
+var Events;
+(function (Events) {
+    var EventBus = (function () {
+        function EventBus() {
+            this._handlers = {};
+        }
+        Object.defineProperty(EventBus, "Instance", {
+            get: function () {
+                return (!EventBus._instance)
+                    ? (EventBus._instance = new EventBus())
+                    : EventBus._instance;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        EventBus.prototype.on = function (channel, event, ctx, callback) {
+            this._handlers[channel] = this._handlers[channel] || {};
+            this._handlers[channel][event] = this._handlers[channel][event] || new Array();
+            this._handlers[channel][event].push({ ctx: ctx, callback: callback });
+        };
+        EventBus.prototype.off = function (channel, event, ctx, callback) {
+            var handlers = (this._handlers[channel] || {})[event];
+            if (!handlers)
+                return;
+            for (var i = 0; i < handlers.length; i++) {
+                if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
+                    handlers.splice(i, 1);
+                    break;
+                }
+            }
+        };
+        EventBus.prototype.fire = function (channel, event) {
+            var args = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                args[_i - 2] = arguments[_i];
+            }
+            var handlers = (this._handlers[channel] || {})[event];
+            if (handlers)
+                handlers.forEach(function (handler) { return handler.callback.call(handler.ctx, args); });
+            else
+                console.log("handlers for channel '%s', event '%s' not found", channel, event);
+        };
+        return EventBus;
+    })();
+    Events.EventBus = EventBus;
+})(Events || (Events = {}));
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var Data = (function () {
+            function Data() {
+            }
+            Data.Users = {};
+            return Data;
+        })();
+        Models.Data = Data;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="../_references.ts"/>
 ///<reference path="TextBox.ts"/>
 var Views;
 (function (Views) {
@@ -516,9 +596,11 @@ window.onload = function () {
     var m = new Views.Main();
     m.render();
     $("#body").replaceWith(m.$el);
-    new Client.Commands.SyncCmd(0)
-        .done(function () { return console.log('sync done'); })
-        .fail(function () { return console.log('sync fail'); })
-        .always(function () { return console.log('sync always'); })
-        .execute();
+    Client.Common.Api.Users.get(1)
+        .then(function (u) { return console.log(u); });
+    // new Client.Commands.SyncCmd(201)
+    //   .done(() => console.log('sync done'))
+    //   .fail(() => console.log('sync fail'))
+    //   .always(() => console.log('sync always'))
+    //   .execute();
 };

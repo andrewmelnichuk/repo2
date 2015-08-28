@@ -8,5 +8,5 @@ namespace Server.Api.Users
     public string Password;
     public string FirstName;
     public string LastName;
-  }  
+  }
 }

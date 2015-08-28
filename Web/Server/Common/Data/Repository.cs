@@ -169,12 +169,17 @@ namespace Server.Common.Data
         var result = new List<Entity>();
         foreach (var kvp in Storage)
           if (kvp.Value.Revision > revision)
-            result.Add(kvp.Value);
+            result.Add(kvp.Value.Clone());
         return result;
       }
       finally {
         Lock.ExitReadLock();
       }
+    }
+
+    public string EntityType 
+    {
+      get { return typeof(T).Name; } 
     }
 
     private static void ReadStorage()
