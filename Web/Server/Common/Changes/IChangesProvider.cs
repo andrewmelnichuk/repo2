@@ -6,5 +6,6 @@ namespace Server.Common.Changes
   public interface IChangesProvider
   {
     List<Entity> GetChanges(long revision);
+    string EntityType { get; }
   }
 }

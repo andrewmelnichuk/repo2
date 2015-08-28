@@ -7,7 +7,8 @@ module Client.Common {
     private _method: HttpMethod;
     private _body: string;
     private _query: string;
-    private _headers: Client.Common.IDictionary<string> = {};
+    private _headers: IDictionary<string> = {};
+    private _callbacks: IDictionary<(response: string) => void> = {};
     private _xhr: XMLHttpRequest = new XMLHttpRequest();
   
     constructor (url?: string) {
@@ -39,8 +40,12 @@ module Client.Common {
       this._method = method;
       return this;
     }
-  
-    public call(): void {
+
+    public call2(callback: (response: string) => void): void {
+      
+    }
+    
+    public call(callbacks: IDictionary<(response: string) => void>): void {
   
       var url = this._url;
   
@@ -49,6 +54,11 @@ module Client.Common {
 
       var body = (this._method != HttpMethod.GET) ? this._body : undefined;
 
+      // this._xhr.onreadystatechange = (e: ProgressEvent) => {
+      //   if (this._xhr.status == 200 && this._xhr.readyState == 4)
+      //     callback(this._xhr.responseText);
+      // };
+
       this._xhr.open(HttpMethod[this._method], url, true);
 
       for (var header in this._headers)
@@ -56,10 +66,6 @@ module Client.Common {
 
       this._xhr.send(body);
       // TODO add response callback
-    }
-  
-    public response(callback: (response: string) => void): HttpClient {
-      return this;
     }
   }
 }

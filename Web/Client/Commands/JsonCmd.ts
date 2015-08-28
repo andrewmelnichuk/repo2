@@ -16,27 +16,26 @@ module Client.Commands {
       this._client.url(Url.api(url));
       this._client.method(method);
       this._client.query(Utils.urlEncode(query));
-  
+
       if (data) {
         this._client.body(JSON.stringify(data));
         this._client.header("Content-Type", "application/json");
       }
-      
-      this._client.response(this.response);
     }
-  
-    private response(response: any): void {
-      // deserealize and process envelope
-      var code;
-      if (code == 200)
-        this._done({});
-      else if (code != 500)
-        this._fail({});
-      this._always({});
-    }
-  
+
     public execute(): void {
-      this._client.call();
+      //this._client.call(this.response);
+    }
+
+    private response(body: string): void {
+      // deserealize and process envelope
+      console.log(body);
+      // var code;
+      // if (code == 200)
+      //   this._done({});
+      // else if (code != 500)
+      //   this._fail({});
+      // this._always({});
     }
   }
 }

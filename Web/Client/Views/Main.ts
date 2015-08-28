@@ -1,4 +1,4 @@
-///<reference path="ViewBase.ts"/>
+///<reference path="../_references.ts"/>
 ///<reference path="TextBox.ts"/>
 
 module Views {
@@ -35,9 +35,12 @@ window.onload = () => {
   m.render();
   $("#body").replaceWith(m.$el);
 
-  new Client.Commands.SyncCmd(0)
-    .done(() => console.log('sync done'))
-    .fail(() => console.log('sync fail'))
-    .always(() => console.log('sync always'))
-    .execute();
+  Client.Common.Api.Users.get(1)
+    .then(u => console.log(u));
+
+  // new Client.Commands.SyncCmd(201)
+  //   .done(() => console.log('sync done'))
+  //   .fail(() => console.log('sync fail'))
+  //   .always(() => console.log('sync always'))
+  //   .execute();
 };
