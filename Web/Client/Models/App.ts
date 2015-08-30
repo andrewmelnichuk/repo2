@@ -15,9 +15,11 @@ module Client.Models {
 
     public static fromJson(json: any): App {
       var app = new App();
-      app.name = json.name;
-      app.code = json.code;
-      app.internalId = json.internalId;
+      app.id = json.Id;
+      app.revision = json.Revision;
+      app.name = json.Name;
+      app.code = json.Code;
+      app.internalId = json.InternalId;
       return app;
     }
   }

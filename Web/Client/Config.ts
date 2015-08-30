@@ -4,8 +4,8 @@ class Config {
   }
 
   private static get cfg(): any {
-    if (!window.hasOwnProperty("config"))
-      throw new Error("Configuration not found");
-    return window["config"];
+    if (window.hasOwnProperty("config"))
+      return window["config"];
+    throw new Error("Configuration not found. Set window.config object.");
   }
 }
