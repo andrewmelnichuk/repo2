@@ -18,6 +18,8 @@ module Client.Models {
 
     public static fromJson(json: any): User {
       var u = new User();
+      u.id = json.Id;
+      u.revision = json.Revision;
       u.login = json.Login;
       u.password = json.Password;
       u.firstName = json.FirstName;

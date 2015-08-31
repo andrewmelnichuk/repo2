@@ -30,17 +30,19 @@ function Activator<T>(type: {new(): T}) : T {
   return new type();
 }
 
+import Api = Client.Common.Api;
+
 window.onload = () => {
   var m = new Views.Main();
   m.render();
   $("#body").replaceWith(m.$el);
 
-  Client.Common.Api.Users.get(1)
-    .then(u => console.log(u));
-
-  // new Client.Commands.SyncCmd(201)
-  //   .done(() => console.log('sync done'))
-  //   .fail(() => console.log('sync fail'))
-  //   .always(() => console.log('sync always'))
-  //   .execute();
+  Promise.all([
+    Api.users.initialize(),
+    Api.apps.initialize()
+  ])
+  .then(vals => {
+    console.log(Api.apps.all().length);
+    console.log(Api.users.all().length);
+  });
 };

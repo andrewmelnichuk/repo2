@@ -10,9 +10,9 @@ var Config = (function () {
     });
     Object.defineProperty(Config, "cfg", {
         get: function () {
-            if (!window.hasOwnProperty("config"))
-                throw new Error("Configuration not found");
-            return window["config"];
+            if (window.hasOwnProperty("config"))
+                return window["config"];
+            throw new Error("Configuration not found. Set window.config object.");
         },
         enumerable: true,
         configurable: true
@@ -364,6 +364,8 @@ var Client;
             }
             User.fromJson = function (json) {
                 var u = new User();
+                u.id = json.Id;
+                u.revision = json.Revision;
                 u.login = json.Login;
                 u.password = json.Password;
                 u.firstName = json.FirstName;
@@ -402,9 +404,11 @@ var Client;
             }
             App.fromJson = function (json) {
                 var app = new App();
-                app.name = json.name;
-                app.code = json.code;
-                app.internalId = json.internalId;
+                app.id = json.Id;
+                app.revision = json.Revision;
+                app.name = json.Name;
+                app.code = json.Code;
+                app.internalId = json.InternalId;
                 return app;
             };
             __decorate([
@@ -453,39 +457,151 @@ var Client;
         Common.Repository = Repository;
         var User = Client.Models.User;
         var App = Client.Models.App;
-        var Resource = (function () {
-            function Resource(url, fromJson) {
-                this._url = Url.api(url);
+        var LookupResource = (function () {
+            function LookupResource(path, fromJson) {
+                this._data = {};
+                this._path = Url.api(path);
                 this._fromJson = fromJson;
             }
-            Resource.prototype.getAll = function () {
+            LookupResource.prototype.initialize = function () {
                 var _this = this;
                 return new Promise(function (resolve, reject) {
-                    $.getJSON(_this._url)
+                    if (_this._initialized)
+                        resolve();
+                    else
+                        $.getJSON(_this._path)
+                            .done(function (data) {
+                            for (var i = 0; i < data.length; i++) {
+                                var obj = _this._fromJson(data[i]);
+                                _this._data[obj.id] = obj;
+                            }
+                            _this._initialized = true;
+                            resolve();
+                        })
+                            .fail(reject);
+                });
+            };
+            LookupResource.prototype.get = function (id) {
+                this.ensureInitialized();
+                if (this._data[id])
+                    return this._data[id];
+                throw new Error("Entity #" + id + " not found");
+            };
+            LookupResource.prototype.all = function () {
+                this.ensureInitialized();
+                var result = new Array();
+                for (var key in this._data)
+                    result.push(this._data[key]);
+                return result;
+            };
+            LookupResource.prototype.save = function (entity) {
+                return new Promise(function (resolve, reject) {
+                });
+            };
+            LookupResource.prototype.delete = function (id) {
+                return new Promise(function (resolve, reject) {
+                });
+            };
+            LookupResource.prototype.ensureInitialized = function () {
+                if (!this._initialized)
+                    throw new Error("Resource was not initialized");
+            };
+            return LookupResource;
+        })();
+        Common.LookupResource = LookupResource;
+        var ModelResource = (function () {
+            function ModelResource(path, fromJson) {
+                this._path = Url.api(path);
+                this._fromJson = fromJson;
+            }
+            ModelResource.prototype.find = function (params) {
+                var _this = this;
+                return new Promise(function (resolve, reject) {
+                    $.getJSON(_this._path + params)
                         .then(function (data) { })
                         .fail(function (error) { });
                 });
             };
-            Resource.prototype.get = function (id) {
+            ModelResource.prototype.getById = function (id) {
                 var _this = this;
                 return new Promise(function (resolve, reject) {
-                    $.getJSON(_this._url + "/" + id)
-                        .then(function (data) { return resolve(_this._fromJson(data)); })
+                    $.getJSON(_this._path + "/" + id)
+                        .then(function (data) {
+                        resolve(_this._fromJson(data));
+                    })
                         .fail(function (error) { return reject(error); });
                 });
             };
-            Resource.prototype.post = function (entity) {
+            ModelResource.prototype.save = function (entity) {
                 return new Promise(function (resolve, reject) {
                 });
             };
-            return Resource;
+            ModelResource.prototype.delete = function (id) {
+                return new Promise(function (resolve, reject) {
+                });
+            };
+            return ModelResource;
         })();
-        Common.Resource = Resource;
+        Common.ModelResource = ModelResource;
+        var UpdatesResource = (function () {
+            function UpdatesResource(path) {
+                this._revision = 0;
+            }
+            UpdatesResource.prototype.get = function () {
+                var _this = this;
+                return new Promise(function (resolve, reject) {
+                    $.ajax({
+                        url: Url.api("/updates"),
+                        method: "POST",
+                        data: { rev: _this._revision },
+                        dataType: "json"
+                    })
+                        .done(function (data) {
+                    })
+                        .fail(reject);
+                });
+            };
+            return UpdatesResource;
+        })();
+        Common.UpdatesResource = UpdatesResource;
+        var Model = (function () {
+            function Model() {
+            }
+            Model.update = function (changes) {
+                var entities;
+                for (var e in changes) {
+                    if (e instanceof User)
+                        entities = this.users;
+                    else if (e instanceof App)
+                        entities = this.apps;
+                    if (entities)
+                        this.applyUpdate(e, entities);
+                    else
+                        throw new Error("Can't update model, unknown entity type " + e.constructor.toString());
+                }
+            };
+            Model.applyUpdate = function (entity, entities) {
+                var existing;
+                for (var e in entities)
+                    if (e.id == entity.id) {
+                        existing = e;
+                        break;
+                    }
+                if (!existing)
+                    entities.push(entity); // add
+                else
+                    $.extend(true, existing, entity); // update
+            };
+            Model.users = [];
+            Model.apps = [];
+            return Model;
+        })();
+        Common.Model = Model;
         var Api = (function () {
             function Api() {
             }
-            Api.Users = new Resource("/users", User.fromJson);
-            Api.Apps = new Resource("/apps", App.fromJson);
+            Api.users = new LookupResource("/users", User.fromJson);
+            Api.apps = new LookupResource("/apps", App.fromJson);
             return Api;
         })();
         Common.Api = Api;
@@ -592,12 +708,19 @@ var Views;
 function Activator(type) {
     return new type();
 }
+var Api = Client.Common.Api;
 window.onload = function () {
     var m = new Views.Main();
     m.render();
     $("#body").replaceWith(m.$el);
-    Client.Common.Api.Users.get(1)
-        .then(function (u) { return console.log(u); });
+    Promise.all([
+        Api.users.initialize(),
+        Api.apps.initialize()
+    ])
+        .then(function (vals) {
+        console.log(Api.apps.all().length);
+        console.log(Api.users.all().length);
+    });
     // new Client.Commands.SyncCmd(201)
     //   .done(() => console.log('sync done'))
     //   .fail(() => console.log('sync fail'))
