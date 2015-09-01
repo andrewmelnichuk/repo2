@@ -30,19 +30,22 @@ function Activator<T>(type: {new(): T}) : T {
   return new type();
 }
 
-import Api = Client.Common.Api;
+import Data = Client.Common.Data;
+import User = Client.Models.User;
 
 window.onload = () => {
   var m = new Views.Main();
   m.render();
   $("#body").replaceWith(m.$el);
 
+  console.log(Data);
+
   Promise.all([
-    Api.users.initialize(),
-    Api.apps.initialize()
+    Data.users.initialize(),
+    Data.apps.initialize()
   ])
   .then(vals => {
-    console.log(Api.apps.all().length);
-    console.log(Api.users.all().length);
+    console.log(Data.apps.all().length);
+    console.log(Data.users.all().length);
   });
 };

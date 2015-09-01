@@ -4,44 +4,18 @@
 module Client.Common {
   
   import IDictionary = Client.Common.IDictionary;
-  
-  export class Repository<T extends Models.Entity> {
-    
-    private _url: string;
-    private _storage: IDictionary<T> = {};
-    
-    constructor(url: string) {
-      this._url = url;
-    }
-    
-    public get(id: number): Promise<T> {
-      var entity = this._storage[id];
-      return new Promise<T>((resolve, reject) => {
-        if (entity)
-          resolve(entity);
-        else
-          $.get(this._url).done(() => resolve(null));
-      });
-    }
-    
-    public get2(int: number): void {
-      this.get(1).then(
-        (value: T) => console.log(value),
-        (error: any) => console.log("error")
-      );
-    }
-  }
-  
+  import Dictionary = Client.Common.Dictionary;
   import Entity = Client.Models.Entity;
   import User = Client.Models.User;
   import App = Client.Models.App;
 
-  export class LookupResource<T extends Entity> {
+  export class EntityRepository<T extends Entity> {
 
     private _path: string;
     private _fromJson: (json: any) => T;
-    private _data: IDictionary<T> = {};
+    private _data = new Dictionary<number, T>()
     private _initialized: boolean;
+    public static i:number;
  
     constructor(path: string, fromJson: (json: any) => T) {
       this._path = Url.api(path);
@@ -57,7 +31,7 @@ module Client.Common {
             .done(data => {
               for (var i = 0; i < data.length; i++) {
                 var obj = this._fromJson(data[i]);
-                this._data[obj.id] = obj;
+                this._data.add(obj.id, obj);
               }
               this._initialized = true;
               resolve();
@@ -65,6 +39,13 @@ module Client.Common {
             .fail(reject);
       });
     }
+ 
+    // public refresh(): Promise<void> {
+    //   this.ensureInitialized();
+    //   var rev = 0;
+    //   for (var item in this._data)
+    //     if (item.)
+    // }
  
     public get(id: number): T {
       this.ensureInitialized();
@@ -136,8 +117,8 @@ module Client.Common {
     }
   }
 
-  export class Api {
-    public static users = new LookupResource<User>("/users", User.fromJson);
-    public static apps = new LookupResource<App>("/apps", App.fromJson);
+  export class Data {
+    public static users = new EntityRepository<User>("/users", User.fromJson);
+    public static apps = new EntityRepository<App>("/apps", App.fromJson);
   }
 }
