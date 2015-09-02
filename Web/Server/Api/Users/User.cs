@@ -1,4 +1,4 @@
-using Server.Common.Data;
+using Server.Common.Entities;
 
 namespace Server.Api.Users
 {

@@ -334,6 +334,43 @@ var Client;
 })(Client || (Client = {}));
 var Client;
 (function (Client) {
+    var Common;
+    (function (Common) {
+        var Dictionary = (function () {
+            function Dictionary() {
+                this._keys = [];
+                this._values = [];
+            }
+            Dictionary.prototype.get = function (key) {
+                return this[key.toString()];
+            };
+            Dictionary.prototype.add = function (key, value) {
+                this[key.toString()] = value;
+                this._keys.push(key);
+                this._values.push(value);
+            };
+            Dictionary.prototype.remove = function (key) {
+                var index = this._keys.indexOf(key, 0);
+                this._keys.splice(index, 1);
+                this._values.splice(index, 1);
+                delete this[key.toString()];
+            };
+            Dictionary.prototype.keys = function () {
+                return this._keys;
+            };
+            Dictionary.prototype.values = function () {
+                return this._values;
+            };
+            Dictionary.prototype.containsKey = function (key) {
+                return this[key.toString()];
+            };
+            return Dictionary;
+        })();
+        Common.Dictionary = Dictionary;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
     var Models;
     (function (Models) {
         var Entity = (function () {
@@ -434,36 +471,16 @@ var Client;
 (function (Client) {
     var Common;
     (function (Common) {
-        var Repository = (function () {
-            function Repository(url) {
-                this._storage = {};
-                this._url = url;
-            }
-            Repository.prototype.get = function (id) {
-                var _this = this;
-                var entity = this._storage[id];
-                return new Promise(function (resolve, reject) {
-                    if (entity)
-                        resolve(entity);
-                    else
-                        $.get(_this._url).done(function () { return resolve(null); });
-                });
-            };
-            Repository.prototype.get2 = function (int) {
-                this.get(1).then(function (value) { return console.log(value); }, function (error) { return console.log("error"); });
-            };
-            return Repository;
-        })();
-        Common.Repository = Repository;
+        var Dictionary = Client.Common.Dictionary;
         var User = Client.Models.User;
         var App = Client.Models.App;
-        var LookupResource = (function () {
-            function LookupResource(path, fromJson) {
-                this._data = {};
+        var EntityRepository = (function () {
+            function EntityRepository(path, fromJson) {
+                this._data = new Dictionary();
                 this._path = Url.api(path);
                 this._fromJson = fromJson;
             }
-            LookupResource.prototype.initialize = function () {
+            EntityRepository.prototype.initialize = function () {
                 var _this = this;
                 return new Promise(function (resolve, reject) {
                     if (_this._initialized)
@@ -473,7 +490,7 @@ var Client;
                             .done(function (data) {
                             for (var i = 0; i < data.length; i++) {
                                 var obj = _this._fromJson(data[i]);
-                                _this._data[obj.id] = obj;
+                                _this._data.add(obj.id, obj);
                             }
                             _this._initialized = true;
                             resolve();
@@ -481,89 +498,40 @@ var Client;
                             .fail(reject);
                 });
             };
-            LookupResource.prototype.get = function (id) {
+            // public refresh(): Promise<void> {
+            //   this.ensureInitialized();
+            //   var rev = 0;
+            //   for (var item in this._data)
+            //     if (item.)
+            // }
+            EntityRepository.prototype.get = function (id) {
                 this.ensureInitialized();
                 if (this._data[id])
                     return this._data[id];
                 throw new Error("Entity #" + id + " not found");
             };
-            LookupResource.prototype.all = function () {
+            EntityRepository.prototype.all = function () {
                 this.ensureInitialized();
                 var result = new Array();
                 for (var key in this._data)
                     result.push(this._data[key]);
                 return result;
             };
-            LookupResource.prototype.save = function (entity) {
+            EntityRepository.prototype.save = function (entity) {
                 return new Promise(function (resolve, reject) {
                 });
             };
-            LookupResource.prototype.delete = function (id) {
+            EntityRepository.prototype.delete = function (id) {
                 return new Promise(function (resolve, reject) {
                 });
             };
-            LookupResource.prototype.ensureInitialized = function () {
+            EntityRepository.prototype.ensureInitialized = function () {
                 if (!this._initialized)
                     throw new Error("Resource was not initialized");
             };
-            return LookupResource;
+            return EntityRepository;
         })();
-        Common.LookupResource = LookupResource;
-        var ModelResource = (function () {
-            function ModelResource(path, fromJson) {
-                this._path = Url.api(path);
-                this._fromJson = fromJson;
-            }
-            ModelResource.prototype.find = function (params) {
-                var _this = this;
-                return new Promise(function (resolve, reject) {
-                    $.getJSON(_this._path + params)
-                        .then(function (data) { })
-                        .fail(function (error) { });
-                });
-            };
-            ModelResource.prototype.getById = function (id) {
-                var _this = this;
-                return new Promise(function (resolve, reject) {
-                    $.getJSON(_this._path + "/" + id)
-                        .then(function (data) {
-                        resolve(_this._fromJson(data));
-                    })
-                        .fail(function (error) { return reject(error); });
-                });
-            };
-            ModelResource.prototype.save = function (entity) {
-                return new Promise(function (resolve, reject) {
-                });
-            };
-            ModelResource.prototype.delete = function (id) {
-                return new Promise(function (resolve, reject) {
-                });
-            };
-            return ModelResource;
-        })();
-        Common.ModelResource = ModelResource;
-        var UpdatesResource = (function () {
-            function UpdatesResource(path) {
-                this._revision = 0;
-            }
-            UpdatesResource.prototype.get = function () {
-                var _this = this;
-                return new Promise(function (resolve, reject) {
-                    $.ajax({
-                        url: Url.api("/updates"),
-                        method: "POST",
-                        data: { rev: _this._revision },
-                        dataType: "json"
-                    })
-                        .done(function (data) {
-                    })
-                        .fail(reject);
-                });
-            };
-            return UpdatesResource;
-        })();
-        Common.UpdatesResource = UpdatesResource;
+        Common.EntityRepository = EntityRepository;
         var Model = (function () {
             function Model() {
             }
@@ -597,14 +565,14 @@ var Client;
             return Model;
         })();
         Common.Model = Model;
-        var Api = (function () {
-            function Api() {
+        var Data = (function () {
+            function Data() {
             }
-            Api.users = new LookupResource("/users", User.fromJson);
-            Api.apps = new LookupResource("/apps", App.fromJson);
-            return Api;
+            Data.users = new EntityRepository("/users", User.fromJson);
+            Data.apps = new EntityRepository("/apps", App.fromJson);
+            return Data;
         })();
-        Common.Api = Api;
+        Common.Data = Data;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
 var DataAccess;
@@ -708,22 +676,19 @@ var Views;
 function Activator(type) {
     return new type();
 }
-var Api = Client.Common.Api;
+var Data = Client.Common.Data;
+var User = Client.Models.User;
 window.onload = function () {
     var m = new Views.Main();
     m.render();
     $("#body").replaceWith(m.$el);
+    console.log(Data);
     Promise.all([
-        Api.users.initialize(),
-        Api.apps.initialize()
+        Data.users.initialize(),
+        Data.apps.initialize()
     ])
         .then(function (vals) {
-        console.log(Api.apps.all().length);
-        console.log(Api.users.all().length);
+        console.log(Data.apps.all().length);
+        console.log(Data.users.all().length);
     });
-    // new Client.Commands.SyncCmd(201)
-    //   .done(() => console.log('sync done'))
-    //   .fail(() => console.log('sync fail'))
-    //   .always(() => console.log('sync always'))
-    //   .execute();
 };

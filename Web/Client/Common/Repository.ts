@@ -3,7 +3,6 @@
 
 module Client.Common {
   
-  import IDictionary = Client.Common.IDictionary;
   import Dictionary = Client.Common.Dictionary;
   import Entity = Client.Models.Entity;
   import User = Client.Models.User;
@@ -11,14 +10,13 @@ module Client.Common {
 
   export class EntityRepository<T extends Entity> {
 
-    private _path: string;
+    private _url: string;
     private _fromJson: (json: any) => T;
     private _data = new Dictionary<number, T>()
     private _initialized: boolean;
-    public static i:number;
  
     constructor(path: string, fromJson: (json: any) => T) {
-      this._path = Url.api(path);
+      this._url = Url.api(path);
       this._fromJson = fromJson;
     }
  
@@ -27,7 +25,7 @@ module Client.Common {
         if (this._initialized)
           resolve();
         else
-          $.getJSON(this._path)
+          $.getJSON(this._url)
             .done(data => {
               for (var i = 0; i < data.length; i++) {
                 var obj = this._fromJson(data[i]);
@@ -56,15 +54,21 @@ module Client.Common {
  
     public all(): Array<T> {
       this.ensureInitialized();
-      var result = new Array<T>();
-      for (var key in this._data)
-        result.push(this._data[key]);
-      return result;
+      return this._data.values();
     }
  
-    public save(entity: T): Promise<T> {
-      return new Promise<T>((resolve, reject) => {
-        
+    public save(entity: T): Promise<number> {
+      return new Promise<number>((resolve, reject) => {
+        $.ajax(this._url, {
+           data: JSON.stringify(entity),
+           contentType: "application/json",
+           dataType: "JSON",
+           type: "POST"})
+         .done(response => {
+           this.updateData(response.Updates);
+           resolve(response.Data);
+         })
+         .fail(reject);
       });
     }
  
@@ -72,6 +76,10 @@ module Client.Common {
       return new Promise<void>((resolve, reject) => {
         
       });
+    }
+    
+    private updateData(json: any) {
+      
     }
     
     private ensureInitialized() {

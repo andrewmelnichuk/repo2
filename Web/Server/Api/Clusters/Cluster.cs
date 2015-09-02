@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Server.Common.Data;
+using Server.Common.Entities;
 
 namespace Server.Api.Clusters
 {
-  public class Cluster : Entity
+    public class Cluster : Entity
   {
     public int AppId;
     public int NetId;

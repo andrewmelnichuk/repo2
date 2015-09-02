@@ -3,21 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
-using Server.Common.Changes;
+using System;
 
-namespace Server.Common.Data
+namespace Server.Common.Entities
 {
-  public class Repository<T> : IChangesProvider where T : Entity
+  public class EntityRepository<T> where T : Entity
   {
     private static int NextId;
+    private static long NextRevision;
     private static Dictionary<int, T> Storage;
     private static ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
     private static string FilePath = string.Format("./Data/{0}.json", typeof(T).Name);
 
-    static Repository()
+    static EntityRepository()
     {
       ReadStorage();
       NextId = Storage.Count > 0 ? Storage.Keys.Last() + 1 : 1;
+      NextRevision = Storage.Count > 0 ? Storage.Values.Max(e => e.Revision) + 1 : 1;
     }
 
     public static T GetById(int id)
@@ -28,7 +30,7 @@ namespace Server.Common.Data
         if (Storage.TryGetValue(id, out entity))
           return (T) entity.Clone();
         else
-          throw new EntityNotFoundException(id, typeof(T));
+          throw Exceptions.EntityNotFound(id, typeof(T));
       }
       finally {
         Lock.ExitReadLock();
@@ -42,21 +44,10 @@ namespace Server.Common.Data
         entity = GetById(id);
         return true;
       }
-      catch (EntityNotFoundException)
+      catch (EntityException)
       {
         entity = null;
         return false;
-      }
-    }
-
-    public static bool Contains(int id)
-    {
-      Lock.EnterReadLock();
-      try {
-        return Storage.ContainsKey(id);
-      }
-      finally {
-        Lock.ExitReadLock();
       }
     }
 
@@ -75,12 +66,15 @@ namespace Server.Common.Data
       }
     }
 
-    public static List<T> GetAll(bool includeDeleted)
+    public static List<T> GetAll(int revision)
     {
+      if (revision < 0)
+        throw new ArgumentException("revision must be greater or equal zero");
+
       Lock.EnterReadLock();
       try {
         return Storage.Values
-          .Where(e => !e.IsDeleted || includeDeleted)
+          .Where(v => v.Revision > revision)
           .Select(v => v.Clone())
           .Cast<T>()
           .ToList();
@@ -90,79 +84,7 @@ namespace Server.Common.Data
       } 
     }
 
-    public static int Add(T entity)
-    {
-      Lock.EnterWriteLock();
-      try {
-        entity.Id = NextId++;
-        entity.Revision = Revision.Next();
-        Storage.Add(entity.Id, entity);
-        WriteStorage();
-        return entity.Id;
-      }
-      catch {
-        if (Storage.ContainsKey(entity.Id))
-          Storage.Remove(entity.Id);
-        throw;
-      }
-      finally {
-        Lock.ExitWriteLock();
-      }
-    }
-
-    public static void Delete(int id)
-    {
-      T copy = null;
-
-      Lock.EnterWriteLock();
-      try {
-        if (Storage.ContainsKey(id)) { 
-          copy = (T) Storage[id].Clone(); 
-          Storage[id].IsDeleted = true;
-          Storage[id].Revision = Revision.Next();
-          WriteStorage();
-        }
-      }
-      catch {
-        if (copy != null)
-          Storage[copy.Id] = copy;
-        throw;
-      }
-      finally {
-        Lock.ExitWriteLock();
-      }
-
-      if (copy == null)
-        throw new EntityNotFoundException(id, typeof(T));
-    }
-
-    public static void Update(T entity)
-    {
-      T copy = null;
-
-      Lock.EnterWriteLock();
-      try {
-        if (Storage.ContainsKey(entity.Id)) {
-          copy = (T) Storage[entity.Id].Clone(); 
-          Storage[entity.Id] = entity;
-          Storage[entity.Id].Revision = Revision.Next();
-          WriteStorage();
-        }
-      }
-      catch {
-        if (copy != null)
-          Storage[copy.Id] = copy;
-        throw;
-      }
-      finally {
-        Lock.ExitWriteLock();
-      }
-
-      if (copy == null)
-        throw new EntityNotFoundException(entity.Id, typeof(T));
-    }
-
-    public List<Entity> GetChanges(long revision)
+    public List<Entity> GetChanged(long revision)
     {
       Lock.EnterReadLock();
       try {
@@ -177,9 +99,90 @@ namespace Server.Common.Data
       }
     }
 
-    public string EntityType 
+    public static bool Contains(int id)
     {
-      get { return typeof(T).Name; } 
+      Lock.EnterReadLock();
+      try {
+        return Storage.ContainsKey(id);
+      }
+      finally {
+        Lock.ExitReadLock();
+      }
+    }
+
+    public static int Add(T entity)
+    {
+      Lock.EnterWriteLock();
+      try {
+        entity.Id = NextId++;
+        entity.Revision = NextRevision++;
+        Storage.Add(entity.Id, entity);
+        WriteStorage();
+        return entity.Id;
+      }
+      catch {
+        if (Storage.ContainsKey(entity.Id))
+          Storage.Remove(entity.Id);
+        throw;
+      }
+      finally {
+        Lock.ExitWriteLock();
+      }
+    }
+
+    public static int Update(T entity)
+    {
+      T copy = null;
+
+      Lock.EnterWriteLock();
+      try {
+        if (!Storage.ContainsKey(entity.Id))
+          throw Exceptions.EntityNotFound(entity.Id, typeof(T));
+        if (Storage[entity.Id].IsDeleted)
+          throw Exceptions.EntityDeleted(entity.Id, typeof(T));
+          
+        copy = (T) Storage[entity.Id].Clone(); 
+        Storage[entity.Id] = entity;
+        Storage[entity.Id].Revision = NextRevision++;
+        WriteStorage();
+        return entity.Id;
+      }
+      catch {
+        if (copy != null)
+          Storage[copy.Id] = copy;
+        throw;
+      }
+      finally {
+        Lock.ExitWriteLock();
+      }
+    }
+
+    public static void Delete(int id)
+    {
+      T copy = null;
+
+      Lock.EnterWriteLock();
+      try {
+        if (Storage.ContainsKey(id)) {
+          var entity = Storage[id];  
+          copy = (T) entity.Clone(); 
+          entity.IsDeleted = true;
+          entity.Revision = NextRevision++;
+          WriteStorage();
+        }
+        else
+        {
+          throw Exceptions.EntityNotFound(id, typeof(T));
+        }
+      }
+      catch {
+        if (copy != null)
+          Storage[copy.Id] = copy;
+        throw;
+      }
+      finally {
+        Lock.ExitWriteLock();
+      }
     }
 
     private static void ReadStorage()

@@ -1,8 +1,8 @@
-using Server.Common;
+using Server.Common.Entities;
 
 namespace Server.Api.Nets
 {
-  public class NetsController : EntityController<Net, NetValidator>
+    public class NetsController : EntityController<Net, NetValidator>
   {
   }
 }
