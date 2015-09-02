@@ -10,8 +10,8 @@ module Views {
     public render() {
       super.render();
       this.$el.html("hello world");
-      
-      this.$el.append(this._tbName.$el);
+      this.$el.append("<input type='button' value='Refresh'>");
+      //this.$el.append(this._tbName.$el);
     }
     
     public events(): Array<IViewEvent> {
@@ -21,7 +21,7 @@ module Views {
     }
     
     private onClick() {
-      console.log("click!!!");
+      Data.users.refresh();
     }
   }
 }

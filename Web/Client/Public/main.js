@@ -476,8 +476,9 @@ var Client;
         var App = Client.Models.App;
         var EntityRepository = (function () {
             function EntityRepository(path, fromJson) {
+                this._revision = 0;
                 this._data = new Dictionary();
-                this._path = Url.api(path);
+                this._url = Url.api(path);
                 this._fromJson = fromJson;
             }
             EntityRepository.prototype.initialize = function () {
@@ -486,24 +487,27 @@ var Client;
                     if (_this._initialized)
                         resolve();
                     else
-                        $.getJSON(_this._path)
+                        $.getJSON(_this._url)
                             .done(function (data) {
-                            for (var i = 0; i < data.length; i++) {
-                                var obj = _this._fromJson(data[i]);
-                                _this._data.add(obj.id, obj);
-                            }
+                            _this.updateData(data);
                             _this._initialized = true;
                             resolve();
                         })
                             .fail(reject);
                 });
             };
-            // public refresh(): Promise<void> {
-            //   this.ensureInitialized();
-            //   var rev = 0;
-            //   for (var item in this._data)
-            //     if (item.)
-            // }
+            EntityRepository.prototype.refresh = function () {
+                var _this = this;
+                this.ensureInitialized();
+                return new Promise(function (resolve, reject) {
+                    $.getJSON(_this._url + "?rev=" + _this._revision)
+                        .done(function (response) {
+                        _this.updateData(response);
+                        resolve();
+                    })
+                        .fail(reject);
+                });
+            };
             EntityRepository.prototype.get = function (id) {
                 this.ensureInitialized();
                 if (this._data[id])
@@ -512,22 +516,51 @@ var Client;
             };
             EntityRepository.prototype.all = function () {
                 this.ensureInitialized();
-                var result = new Array();
-                for (var key in this._data)
-                    result.push(this._data[key]);
-                return result;
+                return this._data.values();
             };
             EntityRepository.prototype.save = function (entity) {
+                var _this = this;
                 return new Promise(function (resolve, reject) {
+                    var url = _this._url + (entity.id > 0) ? ("/" + entity.id) : "";
+                    $.ajax(url + "?rev=" + _this._revision, {
+                        data: JSON.stringify(entity),
+                        contentType: "application/json",
+                        dataType: "JSON",
+                        method: "POST" })
+                        .done(function (response) {
+                        _this.updateData(response.Updates);
+                        resolve(response.Data);
+                    })
+                        .fail(reject);
                 });
             };
             EntityRepository.prototype.delete = function (id) {
+                var _this = this;
                 return new Promise(function (resolve, reject) {
+                    $.ajax(_this._url + "/" + id + "?rev=" + _this._revision, {
+                        dataType: "JSON",
+                        method: "DELETE" })
+                        .done(function (response) {
+                        _this.updateData(response.Updates);
+                        resolve(response.Data);
+                    })
+                        .fail(reject);
                 });
+            };
+            EntityRepository.prototype.updateData = function (json) {
+                for (var i = 0; i < json.length; i++) {
+                    var obj = this._fromJson(json[i]);
+                    if (this._data.containsKey(obj.id))
+                        this._data[obj.id] = obj;
+                    else
+                        this._data.add(obj.id, obj);
+                    if (obj.revision > this._revision)
+                        this._revision = obj.revision;
+                }
             };
             EntityRepository.prototype.ensureInitialized = function () {
                 if (!this._initialized)
-                    throw new Error("Resource was not initialized");
+                    throw new Error("Repository was not initialized");
             };
             return EntityRepository;
         })();
@@ -659,7 +692,8 @@ var Views;
         Main.prototype.render = function () {
             _super.prototype.render.call(this);
             this.$el.html("hello world");
-            this.$el.append(this._tbName.$el);
+            this.$el.append("<input type='button' value='Refresh'>");
+            //this.$el.append(this._tbName.$el);
         };
         Main.prototype.events = function () {
             return [
@@ -667,7 +701,7 @@ var Views;
             ];
         };
         Main.prototype.onClick = function () {
-            console.log("click!!!");
+            Data.users.refresh();
         };
         return Main;
     })(Views.ViewBase);

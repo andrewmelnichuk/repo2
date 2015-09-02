@@ -11,6 +11,7 @@ module Client.Common {
   export class EntityRepository<T extends Entity> {
 
     private _url: string;
+    private _revision: number = 0;
     private _fromJson: (json: any) => T;
     private _data = new Dictionary<number, T>()
     private _initialized: boolean;
@@ -27,10 +28,7 @@ module Client.Common {
         else
           $.getJSON(this._url)
             .done(data => {
-              for (var i = 0; i < data.length; i++) {
-                var obj = this._fromJson(data[i]);
-                this._data.add(obj.id, obj);
-              }
+              this.updateData(data);
               this._initialized = true;
               resolve();
             })
@@ -38,12 +36,17 @@ module Client.Common {
       });
     }
  
-    // public refresh(): Promise<void> {
-    //   this.ensureInitialized();
-    //   var rev = 0;
-    //   for (var item in this._data)
-    //     if (item.)
-    // }
+    public refresh(): Promise<void> {
+      this.ensureInitialized();
+      return new Promise<void>((resolve, reject) => {
+        $.getJSON(this._url + "?rev=" + this._revision)
+         .done(response => {
+           this.updateData(response);
+           resolve();
+         })
+         .fail(reject);
+      });
+    }
  
     public get(id: number): T {
       this.ensureInitialized();
@@ -59,11 +62,12 @@ module Client.Common {
  
     public save(entity: T): Promise<number> {
       return new Promise<number>((resolve, reject) => {
-        $.ajax(this._url, {
+        var url = this._url + (entity.id > 0) ? ("/" + entity.id) : "";
+        $.ajax(url + "?rev=" + this._revision, {
            data: JSON.stringify(entity),
            contentType: "application/json",
            dataType: "JSON",
-           type: "POST"})
+           method: "POST"})
          .done(response => {
            this.updateData(response.Updates);
            resolve(response.Data);
@@ -74,20 +78,37 @@ module Client.Common {
  
     public delete(id: number): Promise<void> {
       return new Promise<void>((resolve, reject) => {
-        
+        $.ajax(this._url + "/" + id + "?rev=" + this._revision, { 
+           dataType: "JSON", 
+           method: "DELETE" })
+         .done(response => {
+           this.updateData(response.Updates);
+           resolve(response.Data);
+         })
+         .fail(reject);
       });
     }
     
     private updateData(json: any) {
-      
+      for (var i = 0; i < json.length; i++) {
+        var obj = this._fromJson(json[i]);
+
+        if (this._data.containsKey(obj.id))
+          this._data[obj.id] = obj;
+        else
+          this._data.add(obj.id, obj);
+
+        if (obj.revision > this._revision)
+          this._revision = obj.revision;
+      }
     }
-    
+
     private ensureInitialized() {
       if (!this._initialized)
-        throw new Error("Resource was not initialized");
+        throw new Error("Repository was not initialized");
     }
   }
- 
+
   export class Model {
 
     public static users: Array<User> = [];
