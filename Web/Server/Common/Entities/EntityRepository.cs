@@ -164,11 +164,13 @@ namespace Server.Common.Entities
       Lock.EnterWriteLock();
       try {
         if (Storage.ContainsKey(id)) {
-          var entity = Storage[id];  
-          copy = (T) entity.Clone(); 
-          entity.IsDeleted = true;
-          entity.Revision = NextRevision++;
-          WriteStorage();
+          var entity = Storage[id];
+          if (!entity.IsDeleted) {
+            copy = (T) entity.Clone(); 
+            entity.IsDeleted = true;
+            entity.Revision = NextRevision++;
+            WriteStorage();
+          }
         }
         else
         {

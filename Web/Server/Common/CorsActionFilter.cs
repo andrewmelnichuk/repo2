@@ -9,7 +9,7 @@ namespace Server.Common
       var headers = context.HttpContext.Response.Headers; 
       headers.Add("Access-Control-Allow-Origin", new[] {"*"});
       headers.Add("Access-Control-Allow-Headers", new[] {"Origin", "X-Requested-With", "Content-Type", "Accept"});
-      headers.Add("Access-Control-Allow-Methods", new[] {"GET", "POST", "PUT"});
+      headers.Add("Access-Control-Allow-Methods", new[] {"GET", "POST", "DELETE"});
     }
   }
 }

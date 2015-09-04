@@ -9,19 +9,22 @@ module Views {
     
     public render() {
       super.render();
-      this.$el.html("hello world");
-      this.$el.append("<input type='button' value='Refresh'>");
-      //this.$el.append(this._tbName.$el);
+      this.$el.html(template);
     }
     
     public events(): Array<IViewEvent> {
       return [
-        {event: "click", selector: "", handler: this.onClick}
+        // {event: "click", selector: ".refresh", handler: this.onRefreshClick},
+        // {event: "click", selector: ".delete", handler: this.onDeleteClick}
       ];
     }
     
-    private onClick() {
+    private onRefreshClick() {
       Data.users.refresh();
+    }
+
+    private onDeleteClick() {
+      Data.users.delete(this.$el.find(".id").val());
     }
   }
 }
@@ -36,7 +39,9 @@ import User = Client.Models.User;
 window.onload = () => {
   var m = new Views.Main();
   m.render();
-  $("#body").replaceWith(m.$el);
+  $("body").replaceWith(template);
+  $(".easyui-layout").layout();
+   $(".easyui-layout .easyui-panel").panel();
 
   console.log(Data);
 
@@ -49,3 +54,16 @@ window.onload = () => {
     console.log(Data.users.all().length);
   });
 };
+
+var template: string = `
+  <div class="easyui-layout" style="height:100%;">
+    <div data-options="region:'south',split:true" style="height:50px;">
+    </div>
+    <div data-options="region:'west',split:true" style="width:300px;">
+      <div class="easyui-panel" title="Clusters" style="border-width:0;height:100%"">
+      tree
+      </div>
+    </div>
+    <div data-options="region:'center',title:''"></div>
+  </div>
+`;

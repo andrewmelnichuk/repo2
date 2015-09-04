@@ -7,7 +7,7 @@ module Views {
   }
   
   export class ViewBase {
-    
+
     private hello: number = 1;
     private _$el: JQuery;
     private _parent: ViewBase;
@@ -70,7 +70,7 @@ module Views {
     
     private bindEvents(): void {
       this._events.forEach(event => {
-        this._$el.on(event.event, event.selector, event.handler);
+        this._$el.on(event.event, event.selector, event.handler.bind(this));
       });
     }
     

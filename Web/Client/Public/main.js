@@ -129,7 +129,7 @@ var Views;
         ViewBase.prototype.bindEvents = function () {
             var _this = this;
             this._events.forEach(function (event) {
-                _this._$el.on(event.event, event.selector, event.handler);
+                _this._$el.on(event.event, event.selector, event.handler.bind(_this));
             });
         };
         ViewBase.prototype.unbindEvents = function () {
@@ -170,168 +170,6 @@ var a;
 // a = new Date();
 a = 1;
 a = "string";
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var BaseCmd = (function () {
-            function BaseCmd() {
-                this._cbDefault = function (_) { };
-                this._done = this._cbDefault;
-                this._fail = this._cbDefault;
-                this._always = this._cbDefault;
-            }
-            BaseCmd.prototype.done = function (callback) {
-                this._done = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.fail = function (callback) {
-                this._fail = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.always = function (callback) {
-                this._always = callback || this._cbDefault;
-                return this;
-            };
-            BaseCmd.prototype.execute = function () {
-            };
-            return BaseCmd;
-        })();
-        Commands.BaseCmd = BaseCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Common;
-    (function (Common) {
-        (function (HttpMethod) {
-            HttpMethod[HttpMethod["GET"] = 0] = "GET";
-            HttpMethod[HttpMethod["POST"] = 1] = "POST";
-        })(Common.HttpMethod || (Common.HttpMethod = {}));
-        var HttpMethod = Common.HttpMethod;
-        ;
-        var HttpClient = (function () {
-            function HttpClient(url) {
-                this._headers = {};
-                this._callbacks = {};
-                this._xhr = new XMLHttpRequest();
-                if (url)
-                    this._url = url;
-            }
-            HttpClient.prototype.url = function (url) {
-                this._url = url;
-                return this;
-            };
-            HttpClient.prototype.query = function (query) {
-                this._query = query;
-                return this;
-            };
-            HttpClient.prototype.header = function (name, value) {
-                this._headers[name] = value;
-                return this;
-            };
-            HttpClient.prototype.body = function (data) {
-                this._body = data;
-                return this;
-            };
-            HttpClient.prototype.method = function (method) {
-                this._method = method;
-                return this;
-            };
-            HttpClient.prototype.call2 = function (callback) {
-            };
-            HttpClient.prototype.call = function (callbacks) {
-                var url = this._url;
-                if (this._query)
-                    url += '?' + this._query;
-                var body = (this._method != HttpMethod.GET) ? this._body : undefined;
-                // this._xhr.onreadystatechange = (e: ProgressEvent) => {
-                //   if (this._xhr.status == 200 && this._xhr.readyState == 4)
-                //     callback(this._xhr.responseText);
-                // };
-                this._xhr.open(HttpMethod[this._method], url, true);
-                for (var header in this._headers)
-                    this._xhr.setRequestHeader(header, this._headers[header]);
-                this._xhr.send(body);
-                // TODO add response callback
-            };
-            return HttpClient;
-        })();
-        Common.HttpClient = HttpClient;
-    })(Common = Client.Common || (Client.Common = {}));
-})(Client || (Client = {}));
-///<reference path="../Common/HttpClient.ts"/>
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var HttpClient = Client.Common.HttpClient;
-        var JsonCmd = (function (_super) {
-            __extends(JsonCmd, _super);
-            function JsonCmd(url, method, data, query) {
-                _super.call(this);
-                this._client = new HttpClient();
-                // create envelope
-                this._client.url(Url.api(url));
-                this._client.method(method);
-                this._client.query(Utils.urlEncode(query));
-                if (data) {
-                    this._client.body(JSON.stringify(data));
-                    this._client.header("Content-Type", "application/json");
-                }
-            }
-            JsonCmd.prototype.execute = function () {
-                //this._client.call(this.response);
-            };
-            JsonCmd.prototype.response = function (body) {
-                // deserealize and process envelope
-                console.log(body);
-                // var code;
-                // if (code == 200)
-                //   this._done({});
-                // else if (code != 500)
-                //   this._fail({});
-                // this._always({});
-            };
-            return JsonCmd;
-        })(Commands.BaseCmd);
-        Commands.JsonCmd = JsonCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Commands;
-    (function (Commands) {
-        var HttpMethod = Client.Common.HttpMethod;
-        var SyncCmd = (function (_super) {
-            __extends(SyncCmd, _super);
-            function SyncCmd(rev) {
-                _super.call(this);
-                this._rev = rev;
-            }
-            SyncCmd.prototype.execute = function () {
-                var _this = this;
-                new Commands.JsonCmd("/sync/index", HttpMethod.GET, undefined, { rev: this._rev })
-                    .done(function (result) {
-                    // update model
-                    _this._done(result);
-                })
-                    .fail(function (result) {
-                    _this._fail(result);
-                })
-                    .always(function (result) {
-                    _this._always(result);
-                })
-                    .execute();
-            };
-            SyncCmd.prototype.doSync = function (result) {
-                console.log('update model');
-            };
-            return SyncCmd;
-        })(Commands.BaseCmd);
-        Commands.SyncCmd = SyncCmd;
-    })(Commands = Client.Commands || (Client.Commands = {}));
-})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Common;
@@ -548,6 +386,8 @@ var Client;
                 });
             };
             EntityRepository.prototype.updateData = function (json) {
+                if (!json)
+                    return;
                 for (var i = 0; i < json.length; i++) {
                     var obj = this._fromJson(json[i]);
                     if (this._data.containsKey(obj.id))
@@ -608,18 +448,66 @@ var Client;
         Common.Data = Data;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
-var DataAccess;
-(function (DataAccess) {
-    var Products = (function () {
-        function Products() {
-        }
-        Products.prototype.Save = function () {
-            console.log("Product save.");
-        };
-        return Products;
-    })();
-    DataAccess.Products = Products;
-})(DataAccess || (DataAccess = {}));
+var Client;
+(function (Client) {
+    var Common;
+    (function (Common) {
+        (function (HttpMethod) {
+            HttpMethod[HttpMethod["GET"] = 0] = "GET";
+            HttpMethod[HttpMethod["POST"] = 1] = "POST";
+        })(Common.HttpMethod || (Common.HttpMethod = {}));
+        var HttpMethod = Common.HttpMethod;
+        ;
+        var HttpClient = (function () {
+            function HttpClient(url) {
+                this._headers = {};
+                this._callbacks = {};
+                this._xhr = new XMLHttpRequest();
+                if (url)
+                    this._url = url;
+            }
+            HttpClient.prototype.url = function (url) {
+                this._url = url;
+                return this;
+            };
+            HttpClient.prototype.query = function (query) {
+                this._query = query;
+                return this;
+            };
+            HttpClient.prototype.header = function (name, value) {
+                this._headers[name] = value;
+                return this;
+            };
+            HttpClient.prototype.body = function (data) {
+                this._body = data;
+                return this;
+            };
+            HttpClient.prototype.method = function (method) {
+                this._method = method;
+                return this;
+            };
+            HttpClient.prototype.call2 = function (callback) {
+            };
+            HttpClient.prototype.call = function (callbacks) {
+                var url = this._url;
+                if (this._query)
+                    url += '?' + this._query;
+                var body = (this._method != HttpMethod.GET) ? this._body : undefined;
+                // this._xhr.onreadystatechange = (e: ProgressEvent) => {
+                //   if (this._xhr.status == 200 && this._xhr.readyState == 4)
+                //     callback(this._xhr.responseText);
+                // };
+                this._xhr.open(HttpMethod[this._method], url, true);
+                for (var header in this._headers)
+                    this._xhr.setRequestHeader(header, this._headers[header]);
+                this._xhr.send(body);
+                // TODO add response callback
+            };
+            return HttpClient;
+        })();
+        Common.HttpClient = HttpClient;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
 var Events;
 (function (Events) {
     var EventBus = (function () {
@@ -666,19 +554,6 @@ var Events;
     })();
     Events.EventBus = EventBus;
 })(Events || (Events = {}));
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var Data = (function () {
-            function Data() {
-            }
-            Data.Users = {};
-            return Data;
-        })();
-        Models.Data = Data;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
 ///<reference path="../_references.ts"/>
 ///<reference path="TextBox.ts"/>
 var Views;
@@ -691,17 +566,16 @@ var Views;
         }
         Main.prototype.render = function () {
             _super.prototype.render.call(this);
-            this.$el.html("hello world");
-            this.$el.append("<input type='button' value='Refresh'>");
-            //this.$el.append(this._tbName.$el);
+            this.$el.html(template);
         };
         Main.prototype.events = function () {
-            return [
-                { event: "click", selector: "", handler: this.onClick }
-            ];
+            return [];
         };
-        Main.prototype.onClick = function () {
+        Main.prototype.onRefreshClick = function () {
             Data.users.refresh();
+        };
+        Main.prototype.onDeleteClick = function () {
+            Data.users.delete(this.$el.find(".id").val());
         };
         return Main;
     })(Views.ViewBase);
@@ -715,7 +589,9 @@ var User = Client.Models.User;
 window.onload = function () {
     var m = new Views.Main();
     m.render();
-    $("#body").replaceWith(m.$el);
+    $("body").replaceWith(template);
+    $(".easyui-layout").layout();
+    $(".easyui-layout .easyui-panel").panel();
     console.log(Data);
     Promise.all([
         Data.users.initialize(),
@@ -726,3 +602,4 @@ window.onload = function () {
         console.log(Data.users.all().length);
     });
 };
+var template = "\n  <div class=\"easyui-layout\" style=\"height:100%;\">\n    <div data-options=\"region:'south',split:true\" style=\"height:50px;\">\n    </div>\n    <div data-options=\"region:'west',split:true\" style=\"width:300px;\">\n      <div class=\"easyui-panel\" title=\"Clusters\" style=\"border-width:0;height:100%\"\">\n      tree\n      </div>\n    </div>\n    <div data-options=\"region:'center',title:''\"></div>\n  </div>\n";
