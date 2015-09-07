@@ -68,80 +68,89 @@ var Utils = (function () {
     };
     return Utils;
 })();
-var Views;
-(function (Views) {
-    var ViewBase = (function () {
-        function ViewBase(parent, el) {
-            this.hello = 1;
-            this._views = [];
-            this._events = [];
-            if (parent) {
-                this._parent = parent;
-                this._parent.addChild(this);
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ViewBase = (function () {
+            function ViewBase(parent) {
+                this.hello = 1;
+                this._views = [];
+                this._events = [];
+                if (parent) {
+                    this._parent = parent;
+                    this._parent.addChild(this);
+                }
+                this._$el = $("<div></div>");
+                this._events = this.events();
+                this.initialize();
+                this.bindEvents();
             }
-            this._$el = el ? $(el) : $("<div></div>");
-            this._events = this.events();
-            this.bindEvents();
-        }
-        Object.defineProperty(ViewBase.prototype, "$el", {
-            get: function () {
-                return this._$el;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ViewBase.prototype, "Views", {
-            get: function () {
-                return this._views;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ViewBase.prototype.events = function () {
-            return [];
-        };
-        ViewBase.prototype.render = function () {
-            this._views.forEach(function (view) { return view.render(); });
-        };
-        ViewBase.prototype.show = function () {
-            this.$el.css("display", "block");
-            this._views.forEach(function (view) { return view.show(); });
-        };
-        ViewBase.prototype.hide = function () {
-            this.$el.css("display", "none");
-            this._views.forEach(function (view) { return view.hide(); });
-        };
-        ViewBase.prototype.destroy = function () {
-            this._views.forEach(function (view) { return view.destroy(); });
-            if (this._parent)
-                this._parent.removeChild(this);
-            this.unbindEvents();
-            this._$el.remove();
-        };
-        ViewBase.prototype.addChild = function (view) {
-            this._views.push(view);
-        };
-        ViewBase.prototype.removeChild = function (view) {
-            var idx = this._views.indexOf(view);
-            if (idx >= 0)
-                this._views.splice(idx, 1);
-        };
-        ViewBase.prototype.bindEvents = function () {
-            var _this = this;
-            this._events.forEach(function (event) {
-                _this._$el.on(event.event, event.selector, event.handler.bind(_this));
+            Object.defineProperty(ViewBase.prototype, "$el", {
+                get: function () {
+                    return this._$el;
+                },
+                enumerable: true,
+                configurable: true
             });
-        };
-        ViewBase.prototype.unbindEvents = function () {
-            var _this = this;
-            this._events.forEach(function (event) {
-                _this._$el.off(event.event, event.selector, event.handler);
+            Object.defineProperty(ViewBase.prototype, "Views", {
+                get: function () {
+                    return this._views;
+                },
+                enumerable: true,
+                configurable: true
             });
-        };
-        return ViewBase;
-    })();
-    Views.ViewBase = ViewBase;
-})(Views || (Views = {}));
+            ViewBase.prototype.initialize = function () {
+            };
+            ViewBase.prototype.events = function () {
+                return [];
+            };
+            ViewBase.prototype.render = function () {
+                this._views.forEach(function (view) { return view.render(); });
+            };
+            ViewBase.prototype.postRender = function () {
+                this._views.forEach(function (view) { return view.postRender(); });
+            };
+            ViewBase.prototype.show = function () {
+                this.$el.css("display", "block");
+                this._views.forEach(function (view) { return view.show(); });
+            };
+            ViewBase.prototype.hide = function () {
+                this.$el.css("display", "none");
+                this._views.forEach(function (view) { return view.hide(); });
+            };
+            ViewBase.prototype.destroy = function () {
+                this._views.forEach(function (view) { return view.destroy(); });
+                if (this._parent)
+                    this._parent.removeChild(this);
+                this.unbindEvents();
+                this._$el.remove();
+            };
+            ViewBase.prototype.addChild = function (view) {
+                this._views.push(view);
+            };
+            ViewBase.prototype.removeChild = function (view) {
+                var idx = this._views.indexOf(view);
+                if (idx >= 0)
+                    this._views.splice(idx, 1);
+            };
+            ViewBase.prototype.bindEvents = function () {
+                var _this = this;
+                this._events.forEach(function (event) {
+                    _this._$el.on(event.event, event.selector, event.handler.bind(_this));
+                });
+            };
+            ViewBase.prototype.unbindEvents = function () {
+                var _this = this;
+                this._events.forEach(function (event) {
+                    _this._$el.off(event.event, event.selector, event.handler);
+                });
+            };
+            return ViewBase;
+        })();
+        Views.ViewBase = ViewBase;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="ViewBase.ts"/>
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -149,21 +158,25 @@ var __extends = (this && this.__extends) || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-var Views;
-(function (Views) {
-    var TextBox = (function (_super) {
-        __extends(TextBox, _super);
-        function TextBox() {
-            _super.apply(this, arguments);
-        }
-        TextBox.prototype.render = function () {
-            _super.prototype.render.call(this);
-            this.$el.html("<input type=\"text\" value=\"asd\"></input>");
-        };
-        return TextBox;
-    })(Views.ViewBase);
-    Views.TextBox = TextBox;
-})(Views || (Views = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var TextBox = (function (_super) {
+            __extends(TextBox, _super);
+            function TextBox() {
+                _super.apply(this, arguments);
+            }
+            TextBox.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html("<input type=\"text\" value=\"asd\"></input>");
+                return this;
+            };
+            return TextBox;
+        })(Client.Views.ViewBase);
+        Views.TextBox = TextBox;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="Views/ViewBase.ts"/>
 ///<reference path="Views/TextBox.ts"/> 
 var a;
@@ -554,52 +567,160 @@ var Events;
     })();
     Events.EventBus = EventBus;
 })(Events || (Events = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ClustersView = (function (_super) {
+            __extends(ClustersView, _super);
+            function ClustersView() {
+                _super.apply(this, arguments);
+            }
+            ClustersView.prototype.initialize = function () {
+            };
+            ClustersView.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html("\n        <div class=\"easyui-panel\" title=\"Clusters\" style=\"border-width:0;padding:5px;\"\">\n          <ul class=\"easyui-tree\"></ul>\n        </div>\n      ");
+            };
+            ClustersView.prototype.postRender = function () {
+                _super.prototype.postRender.call(this);
+                this.$el.find(".easyui-panel").panel();
+                this.$el.find(".easyui-tree").tree({
+                    "data": [{
+                            "id": 1,
+                            "text": "Production",
+                            "children": [{
+                                    "id": 11,
+                                    "text": "Total Domination",
+                                    "children": [{
+                                            "id": 111,
+                                            "text": "Manage"
+                                        }, {
+                                            "id": 112,
+                                            "text": "Config"
+                                        }, {
+                                            "id": 113,
+                                            "text": "Logs"
+                                        }, {
+                                            "id": 114,
+                                            "text": "Perf"
+                                        }, {
+                                            "id": 115,
+                                            "text": "Servers"
+                                        }]
+                                }, {
+                                    "id": 12,
+                                    "text": "Elves"
+                                }, {
+                                    "id": 13,
+                                    "text": "Pirates"
+                                }, {
+                                    "id": 14,
+                                    "text": "Sparta"
+                                }, {
+                                    "id": 15,
+                                    "text": "Nords"
+                                }]
+                        }]
+                });
+            };
+            return ClustersView;
+        })(Client.Views.ViewBase);
+        Views.ClustersView = ClustersView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="../_references.ts"/>
 ///<reference path="TextBox.ts"/>
-var Views;
-(function (Views) {
-    var Main = (function (_super) {
-        __extends(Main, _super);
-        function Main() {
-            _super.apply(this, arguments);
-            this._tbName = new Views.TextBox(this);
-        }
-        Main.prototype.render = function () {
-            _super.prototype.render.call(this);
-            this.$el.html(template);
-        };
-        Main.prototype.events = function () {
-            return [];
-        };
-        Main.prototype.onRefreshClick = function () {
-            Data.users.refresh();
-        };
-        Main.prototype.onDeleteClick = function () {
-            Data.users.delete(this.$el.find(".id").val());
-        };
-        return Main;
-    })(Views.ViewBase);
-    Views.Main = Main;
-})(Views || (Views = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var Main = (function (_super) {
+            __extends(Main, _super);
+            function Main() {
+                _super.apply(this, arguments);
+                this._vwClusters = new Views.ClustersView(this);
+            }
+            Main.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(template);
+                this.$el.find(".west").append(this._vwClusters.$el);
+            };
+            Main.prototype.postRender = function () {
+                _super.prototype.postRender.call(this);
+                this.$el.find(".easyui-layout").layout();
+            };
+            Main.prototype.events = function () {
+                return [];
+            };
+            Main.prototype.onRefreshClick = function () {
+                Data.users.refresh();
+            };
+            Main.prototype.onDeleteClick = function () {
+                Data.users.delete(this.$el.find(".id").val());
+            };
+            return Main;
+        })(Views.ViewBase);
+        Views.Main = Main;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 function Activator(type) {
     return new type();
 }
 var Data = Client.Common.Data;
 var User = Client.Models.User;
 window.onload = function () {
-    var m = new Views.Main();
-    m.render();
-    $("body").replaceWith(template);
-    $(".easyui-layout").layout();
-    $(".easyui-layout .easyui-panel").panel();
+    var main = new Client.Views.Main();
+    main.render();
+    $("body").append(main.$el);
+    main.postRender();
+    // $(".easyui-layout .easyui-panel").panel();
+    // $(".easyui-layout .easyui-tree").tree({
+    //   "data": [{
+    //     "id": 1,
+    //     "text": "Production",
+    //     "children": [{
+    //       "id": 11,
+    //       "text": "Total Domination",
+    //       "children": [{
+    //         "id": 111,
+    //         "text": "Manage"
+    //       }, {
+    //         "id": 112,
+    //         "text": "Config"
+    //       }, {
+    //         "id": 113,
+    //         "text": "Logs"
+    //       }, {
+    //         "id": 114,
+    //         "text": "Perf"
+    //       }, {
+    //         "id": 115,
+    //         "text": "Servers"
+    //       }]
+    //     }, {
+    //       "id": 12,
+    //       "text": "Elves"
+    //     }, {
+    //       "id": 13,
+    //       "text": "Pirates"
+    //     }, {
+    //       "id": 14,
+    //       "text": "Sparta"
+    //     }, {
+    //       "id": 15,
+    //       "text": "Nords"
+    //     }]
+    //   }]
+    // });
     console.log(Data);
-    Promise.all([
-        Data.users.initialize(),
-        Data.apps.initialize()
-    ])
-        .then(function (vals) {
-        console.log(Data.apps.all().length);
-        console.log(Data.users.all().length);
-    });
+    // Promise.all([
+    //   Data.users.initialize(),
+    //   Data.apps.initialize()
+    // ])
+    // .then(vals => {
+    //   console.log(Data.apps.all().length);
+    //   console.log(Data.users.all().length);
+    // });
 };
-var template = "\n  <div class=\"easyui-layout\" style=\"height:100%;\">\n    <div data-options=\"region:'south',split:true\" style=\"height:50px;\">\n    </div>\n    <div data-options=\"region:'west',split:true\" style=\"width:300px;\">\n      <div class=\"easyui-panel\" title=\"Clusters\" style=\"border-width:0;height:100%\"\">\n      tree\n      </div>\n    </div>\n    <div data-options=\"region:'center',title:''\"></div>\n  </div>\n";
+var template = "\n  <div class=\"easyui-layout\" style=\"height:100%;\">\n    <div data-options=\"region:'south',split:true\" style=\"height:50px;\">\n    </div>\n    <div data-options=\"region:'west',split:true\" class=\"west\" style=\"width:300px;\">\n    </div>\n    <div class=\"center\" data-options=\"region:'center',title:''\"></div>\n  </div>\n";

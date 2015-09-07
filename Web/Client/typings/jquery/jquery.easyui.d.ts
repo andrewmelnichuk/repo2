@@ -1,4 +1,5 @@
 interface JQuery {
-  layout(): any;
-  panel(): any;
+  layout(options?: any): any;
+  panel(options?: any): any;
+  tree(options?: any): any;
 }

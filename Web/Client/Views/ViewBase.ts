@@ -1,4 +1,4 @@
-module Views {
+module Client.Views {
   
   export interface IViewEvent {
     event: string;
@@ -14,13 +14,14 @@ module Views {
     private _views: Array<ViewBase> = [];
     private _events: Array<IViewEvent> = [];
     
-    constructor(parent?: ViewBase, el?: Element) {
+    constructor(parent?: ViewBase) {
       if (parent) {
         this._parent = parent;
         this._parent.addChild(this);
       }
-      this._$el = el ? $(el) : $("<div></div>");
+      this._$el = $("<div></div>");
       this._events = this.events();
+      this.initialize();
       this.bindEvents();
     }
     
@@ -32,12 +33,19 @@ module Views {
       return this._views;
     }
     
+    protected initialize() {
+    }
+    
     public events(): Array<IViewEvent> {
       return [];
     }
     
     public render() {
       this._views.forEach(view => view.render());
+    }
+    
+    public postRender() {
+      this._views.forEach(view => view.postRender());
     }
     
     public show() {
@@ -58,11 +66,11 @@ module Views {
       this._$el.remove();
     }
     
-    public addChild(view: ViewBase) {
+    protected addChild(view: ViewBase) {
       this._views.push(view);
     }
     
-    public removeChild(view: ViewBase) {
+    protected removeChild(view: ViewBase) {
       var idx= this._views.indexOf(view);
       if (idx >= 0)
         this._views.splice(idx, 1);
