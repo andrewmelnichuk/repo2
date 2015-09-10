@@ -1,5 +1,7 @@
 interface JQuery {
-  layout(options?: any): any;
-  panel(options?: any): any;
-  tree(options?: any): any;
+  layout(...options: any[]): any;
+  panel(...options: any[]): any;
+  tree(...options: any[]): any;
+  datagrid(...options: any[]): any;
+  jstree(...options: any[]): any;
 }

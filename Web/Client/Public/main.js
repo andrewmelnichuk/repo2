@@ -35,7 +35,7 @@ function property(target, property) {
                     var oldVal = value;
                     value = newVal;
                     var channel = target.constructor["eventsChannel"];
-                    Events.EventBus.Instance.fire(channel, "change", target, oldVal, newVal);
+                    Client.Events.EventBus.Instance.fire(channel, "change", target, oldVal, newVal);
                 }
             },
             enumerable: true,
@@ -74,7 +74,6 @@ var Client;
     (function (Views) {
         var ViewBase = (function () {
             function ViewBase(parent) {
-                this.hello = 1;
                 this._views = [];
                 this._events = [];
                 if (parent) {
@@ -83,8 +82,8 @@ var Client;
                 }
                 this._$el = $("<div></div>");
                 this._events = this.events();
-                this.initialize();
                 this.bindEvents();
+                this.initialize();
             }
             Object.defineProperty(ViewBase.prototype, "$el", {
                 get: function () {
@@ -104,6 +103,18 @@ var Client;
             };
             ViewBase.prototype.events = function () {
                 return [];
+            };
+            ViewBase.prototype.viewEvents = function () {
+                return {
+                    "click .btn": function () { return 1; },
+                    "click .lnk": function () { return 2; }
+                };
+            };
+            ViewBase.prototype.busEvents = function () {
+                return {
+                    "ui.content-view change": function () { return 1; },
+                    "click .lnk": function () { return 2; }
+                };
             };
             ViewBase.prototype.render = function () {
                 this._views.forEach(function (view) { return view.render(); });
@@ -140,6 +151,21 @@ var Client;
                     _this._$el.on(event.event, event.selector, event.handler.bind(_this));
                 });
             };
+            ViewBase.prototype.bindEvents2 = function () {
+                var viewEvents = this.viewEvents();
+                for (var item in viewEvents) {
+                    if (viewEvents.hasOwnProperty(item)) {
+                        var result = this.parse(item);
+                        this._$el.on(result.event, result.selector, viewEvents[item].bind(this));
+                    }
+                }
+            };
+            ViewBase.prototype.parse = function (item) {
+                return {
+                    event: "event",
+                    selector: "selector"
+                };
+            };
             ViewBase.prototype.unbindEvents = function () {
                 var _this = this;
                 this._events.forEach(function (event) {
@@ -151,34 +177,7 @@ var Client;
         Views.ViewBase = ViewBase;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-///<reference path="ViewBase.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var TextBox = (function (_super) {
-            __extends(TextBox, _super);
-            function TextBox() {
-                _super.apply(this, arguments);
-            }
-            TextBox.prototype.render = function () {
-                _super.prototype.render.call(this);
-                this.$el.html("<input type=\"text\" value=\"asd\"></input>");
-                return this;
-            };
-            return TextBox;
-        })(Client.Views.ViewBase);
-        Views.TextBox = TextBox;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
 ///<reference path="Views/ViewBase.ts"/>
-///<reference path="Views/TextBox.ts"/> 
 var a;
 // a = new Date();
 a = 1;
@@ -233,6 +232,12 @@ var Client;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
 ///<reference path="Entity.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
     switch (arguments.length) {
@@ -521,199 +526,125 @@ var Client;
         Common.HttpClient = HttpClient;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
-var Events;
-(function (Events) {
-    var EventBus = (function () {
-        function EventBus() {
-            this._handlers = {};
-        }
-        Object.defineProperty(EventBus, "Instance", {
-            get: function () {
-                return (!EventBus._instance)
-                    ? (EventBus._instance = new EventBus())
-                    : EventBus._instance;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        EventBus.prototype.on = function (channel, event, ctx, callback) {
-            this._handlers[channel] = this._handlers[channel] || {};
-            this._handlers[channel][event] = this._handlers[channel][event] || new Array();
-            this._handlers[channel][event].push({ ctx: ctx, callback: callback });
-        };
-        EventBus.prototype.off = function (channel, event, ctx, callback) {
-            var handlers = (this._handlers[channel] || {})[event];
-            if (!handlers)
-                return;
-            for (var i = 0; i < handlers.length; i++) {
-                if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
-                    handlers.splice(i, 1);
-                    break;
+var Client;
+(function (Client) {
+    var Events;
+    (function (Events) {
+        var EventBus = (function () {
+            function EventBus() {
+                this._handlers = {};
+            }
+            Object.defineProperty(EventBus, "Instance", {
+                get: function () {
+                    return (!EventBus._instance)
+                        ? (EventBus._instance = new EventBus())
+                        : EventBus._instance;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            EventBus.prototype.on = function (channel, event, ctx, callback) {
+                this._handlers[channel] = this._handlers[channel] || {};
+                this._handlers[channel][event] = this._handlers[channel][event] || new Array();
+                this._handlers[channel][event].push({ ctx: ctx, callback: callback });
+            };
+            EventBus.prototype.off = function (channel, event, ctx, callback) {
+                var handlers = (this._handlers[channel] || {})[event];
+                if (!handlers)
+                    return;
+                for (var i = 0; i < handlers.length; i++) {
+                    if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
+                        handlers.splice(i, 1);
+                        break;
+                    }
                 }
-            }
-        };
-        EventBus.prototype.fire = function (channel, event) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            var handlers = (this._handlers[channel] || {})[event];
-            if (handlers)
-                handlers.forEach(function (handler) { return handler.callback.call(handler.ctx, args); });
-            else
-                console.log("handlers for channel '%s', event '%s' not found", channel, event);
-        };
-        return EventBus;
-    })();
-    Events.EventBus = EventBus;
-})(Events || (Events = {}));
+            };
+            EventBus.prototype.fire = function (channel, event) {
+                var args = [];
+                for (var _i = 2; _i < arguments.length; _i++) {
+                    args[_i - 2] = arguments[_i];
+                }
+                var handlers = (this._handlers[channel] || {})[event];
+                if (handlers)
+                    handlers.forEach(function (handler) { return handler.callback.call(handler.ctx, args); });
+                else
+                    console.log("handlers for channel '%s', event '%s' not found", channel, event);
+            };
+            return EventBus;
+        })();
+        Events.EventBus = EventBus;
+    })(Events = Client.Events || (Client.Events = {}));
+})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        var ClustersView = (function (_super) {
-            __extends(ClustersView, _super);
-            function ClustersView() {
+        var ExplorerView = (function (_super) {
+            __extends(ExplorerView, _super);
+            function ExplorerView() {
                 _super.apply(this, arguments);
+                this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\" style=\"border: 0px solid red\">\n          <div class=\"panel panel-default\">\n            <div class=\"panel-heading\">\n              <h3 class=\"panel-title\">Games</h3>\n            </div>\n            <div class=\"panel-body\" style=\"padding:10px;\">\n              <div id=\"jstree\">\n                <ul>\n                  <li>Production\n                    <ul>\n                      <li>Total Domination\n                        <ul>\n                          <li>Manage</li>\n                          <li>Configs</li>\n                          <li>Logs</li>\n                          <li>Perfs</li>\n                          <li>Servers</li>\n                        </ul>\n                      </li>\n                      <li>Sparta</li>\n                      <li>Pirates</li>\n                      <li>Elves</li>\n                      <li>Nords</li>\n                    </ul>\n                  </li>\n                  <li>Supertest\n                    <ul>\n                      <li>Total Domination</li>\n                    </ul>\n                  </li>\n                </ul>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"col-md-9\" style=\"border: 1px solid red\">\n          <h1>Title</h1>\n        </div>\n      </div>\n    ";
             }
-            ClustersView.prototype.initialize = function () {
+            ExplorerView.prototype.initialize = function () {
             };
-            ClustersView.prototype.render = function () {
+            ExplorerView.prototype.render = function () {
                 _super.prototype.render.call(this);
-                this.$el.html("\n        <div class=\"easyui-panel\" title=\"Clusters\" style=\"border-width:0;padding:5px;\"\">\n          <ul class=\"easyui-tree\"></ul>\n        </div>\n      ");
+                this.$el.html(this.template);
+                this.$el.find("#jstree").jstree();
             };
-            ClustersView.prototype.postRender = function () {
-                _super.prototype.postRender.call(this);
-                this.$el.find(".easyui-panel").panel();
-                this.$el.find(".easyui-tree").tree({
-                    "data": [{
-                            "id": 1,
-                            "text": "Production",
-                            "children": [{
-                                    "id": 11,
-                                    "text": "Total Domination",
-                                    "children": [{
-                                            "id": 111,
-                                            "text": "Manage"
-                                        }, {
-                                            "id": 112,
-                                            "text": "Config"
-                                        }, {
-                                            "id": 113,
-                                            "text": "Logs"
-                                        }, {
-                                            "id": 114,
-                                            "text": "Perf"
-                                        }, {
-                                            "id": 115,
-                                            "text": "Servers"
-                                        }]
-                                }, {
-                                    "id": 12,
-                                    "text": "Elves"
-                                }, {
-                                    "id": 13,
-                                    "text": "Pirates"
-                                }, {
-                                    "id": 14,
-                                    "text": "Sparta"
-                                }, {
-                                    "id": 15,
-                                    "text": "Nords"
-                                }]
-                        }]
-                });
-            };
-            return ClustersView;
+            return ExplorerView;
         })(Client.Views.ViewBase);
-        Views.ClustersView = ClustersView;
+        Views.ExplorerView = ExplorerView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 ///<reference path="../_references.ts"/>
-///<reference path="TextBox.ts"/>
 var Client;
 (function (Client) {
     var Views;
     (function (Views) {
+        var Dictionary = Client.Common.Dictionary;
+        var EventBus = Client.Events.EventBus;
         var Main = (function (_super) {
             __extends(Main, _super);
             function Main() {
-                _super.apply(this, arguments);
-                this._vwClusters = new Views.ClustersView(this);
+                _super.call(this);
+                this._vwTopNav = new Views.TopNav(this);
+                this.viewCreators = new Dictionary();
+                this.viewCreators.add("explore", function (parent) { return new Views.ExplorerView(parent); });
+                this.viewCreators.add("manage", function (parent) { return new Views.ManageView(parent); });
+                this.viewCreators.add("settings", function (parent) { return new Views.SettingsView(parent); });
             }
             Main.prototype.render = function () {
                 _super.prototype.render.call(this);
-                this.$el.html(template);
-                this.$el.find(".west").append(this._vwClusters.$el);
+                this.$el.html("\n        <div class=\"container\">\n          <div class=\"topnav\"></div>\n          <div class=\"content\"></div>\n        </div>\n      ");
+                this.$el.find(".container .topnav").append(this._vwTopNav.$el);
             };
-            Main.prototype.postRender = function () {
-                _super.prototype.postRender.call(this);
-                this.$el.find(".easyui-layout").layout();
+            Main.prototype.initialize = function () {
+                EventBus.Instance.on("ui.content-view", "change", this, this.setContentView);
             };
-            Main.prototype.events = function () {
-                return [];
-            };
-            Main.prototype.onRefreshClick = function () {
-                Data.users.refresh();
-            };
-            Main.prototype.onDeleteClick = function () {
-                Data.users.delete(this.$el.find(".id").val());
+            Main.prototype.setContentView = function (menuItem) {
+                if (!this.viewCreators.containsKey(menuItem))
+                    throw new Error("Unknown menu item '" + menuItem + "'");
+                if (this._vmContent)
+                    this._vmContent.destroy();
+                this._vmContent = this.viewCreators.get(menuItem)(this);
+                this._vmContent.render();
+                this.$el.find(".content").append(this._vmContent.$el);
             };
             return Main;
         })(Views.ViewBase);
         Views.Main = Main;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-function Activator(type) {
-    return new type();
-}
 var Data = Client.Common.Data;
 var User = Client.Models.User;
 window.onload = function () {
     var main = new Client.Views.Main();
     main.render();
     $("body").append(main.$el);
-    main.postRender();
-    // $(".easyui-layout .easyui-panel").panel();
-    // $(".easyui-layout .easyui-tree").tree({
-    //   "data": [{
-    //     "id": 1,
-    //     "text": "Production",
-    //     "children": [{
-    //       "id": 11,
-    //       "text": "Total Domination",
-    //       "children": [{
-    //         "id": 111,
-    //         "text": "Manage"
-    //       }, {
-    //         "id": 112,
-    //         "text": "Config"
-    //       }, {
-    //         "id": 113,
-    //         "text": "Logs"
-    //       }, {
-    //         "id": 114,
-    //         "text": "Perf"
-    //       }, {
-    //         "id": 115,
-    //         "text": "Servers"
-    //       }]
-    //     }, {
-    //       "id": 12,
-    //       "text": "Elves"
-    //     }, {
-    //       "id": 13,
-    //       "text": "Pirates"
-    //     }, {
-    //       "id": 14,
-    //       "text": "Sparta"
-    //     }, {
-    //       "id": 15,
-    //       "text": "Nords"
-    //     }]
-    //   }]
-    // });
-    console.log(Data);
+    // main.postRender();
+    // $("#tt").tree();
+    // $("#grd").datagrid();
     // Promise.all([
     //   Data.users.initialize(),
     //   Data.apps.initialize()
@@ -723,4 +654,84 @@ window.onload = function () {
     //   console.log(Data.users.all().length);
     // });
 };
-var template = "\n  <div class=\"easyui-layout\" style=\"height:100%;\">\n    <div data-options=\"region:'south',split:true\" style=\"height:50px;\">\n    </div>\n    <div data-options=\"region:'west',split:true\" class=\"west\" style=\"width:300px;\">\n    </div>\n    <div class=\"center\" data-options=\"region:'center',title:''\"></div>\n  </div>\n";
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ManageView = (function (_super) {
+            __extends(ManageView, _super);
+            function ManageView() {
+                _super.apply(this, arguments);
+                this.template = "Manage view";
+            }
+            ManageView.prototype.initialize = function () {
+            };
+            ManageView.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(this.template);
+            };
+            return ManageView;
+        })(Client.Views.ViewBase);
+        Views.ManageView = ManageView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var SettingsView = (function (_super) {
+            __extends(SettingsView, _super);
+            function SettingsView() {
+                _super.apply(this, arguments);
+                this.template = "Settings view";
+            }
+            SettingsView.prototype.initialize = function () {
+            };
+            SettingsView.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(this.template);
+            };
+            return SettingsView;
+        })(Client.Views.ViewBase);
+        Views.SettingsView = SettingsView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../Events/EventBus.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var EventBus = Client.Events.EventBus;
+        var TopNav = (function (_super) {
+            __extends(TopNav, _super);
+            function TopNav() {
+                _super.apply(this, arguments);
+                this.template = "\n      <nav class=\"navbar navbar-default\">\n        <div class=\"container-fluid\">\n\n          <!-- Brand and toggle get grouped for better mobile display -->\n          <div class=\"navbar-header\">\n            <a class=\"navbar-brand\" href=\"#\">Plarium</a>\n          </div>\n      \n          <!-- Collect the nav links, forms, and other content for toggling -->\n          <ul class=\"nav navbar-nav\">\n            <li><a href=\"#\" data-menu-item=\"explore\">Explore <span class=\"sr-only\">(current)</span></a></li>\n            <li><a href=\"#\" data-menu-item=\"manage\">Manage</a></li>\n          </ul>\n          <ul class=\"nav navbar-nav navbar-right\">\n            <li class=\"dropdown\">\n              <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username <span class=\"caret\"></span></a>\n              <ul class=\"dropdown-menu\">\n                <li><a href=\"#\" data-menu-item=\"settings\">Settings</a></li>\n                <li><a href=\"#\" data-menu-item=\"logout\">Logout</a></li>\n              </ul>\n            </li>\n          </ul>\n        </div>\n      </nav>\n    ";
+            }
+            TopNav.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(this.template);
+            };
+            TopNav.prototype.events = function () {
+                return [
+                    { event: "click", selector: "a[data-menu-item]", handler: this.menuItemClick },
+                ];
+            };
+            TopNav.prototype.menuItemClick = function (event) {
+                console.log(this);
+                var menuItem = $(event.target).attr("data-menu-item");
+                this.setActiveMenuItem(menuItem);
+                EventBus.Instance.fire("ui.content-view", "change", menuItem);
+            };
+            TopNav.prototype.setActiveMenuItem = function (item) {
+                if (this.$activeMenuItem)
+                    this.$activeMenuItem.parent("li").removeClass("active");
+                this.$activeMenuItem = this.$el.find("a[data-menu-item='" + item + "']");
+                if (this.$activeMenuItem)
+                    this.$activeMenuItem.parent("li").addClass("active");
+            };
+            return TopNav;
+        })(Views.ViewBase);
+        Views.TopNav = TopNav;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));

@@ -1,42 +1,50 @@
 ///<reference path="../_references.ts"/>
-///<reference path="TextBox.ts"/>
 
 module Client.Views {
 
+  import Dictionary = Client.Common.Dictionary;
+  import EventBus = Client.Events.EventBus;
+
   export class Main extends ViewBase {
 
-    private _vwClusters = new ClustersView(this);
+    private _vwTopNav = new TopNav(this);
+    private _vmContent: ViewBase;
 
-    public render() {
-      super.render();
-      this.$el.html(template);
-      this.$el.find(".west").append(this._vwClusters.$el);
-    }
+    private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>();
 
-    public postRender() {
-      super.postRender();
-      this.$el.find(".easyui-layout").layout();
-    }
-
-    public events(): Array<IViewEvent> {
-      return [
-        // {event: "click", selector: ".refresh", handler: this.onRefreshClick},
-        // {event: "click", selector: ".delete", handler: this.onDeleteClick}
-      ];
+    constructor() {
+      super();
+      this.viewCreators.add("explore", parent => new ExplorerView(parent));
+      this.viewCreators.add("manage", parent => new ManageView(parent));
+      this.viewCreators.add("settings", parent => new SettingsView(parent));
     }
     
-    private onRefreshClick() {
-      Data.users.refresh();
+    public render() {
+      super.render();
+      this.$el.html(`
+        <div class="container">
+          <div class="topnav"></div>
+          <div class="content"></div>
+        </div>
+      `);
+      this.$el.find(".container .topnav").append(this._vwTopNav.$el);
     }
 
-    private onDeleteClick() {
-      Data.users.delete(this.$el.find(".id").val());
+    public initialize() {
+      EventBus.Instance.on("ui.content-view", "change", this, this.setContentView);
+    }
+    
+    private setContentView(menuItem: string) {
+      if (!this.viewCreators.containsKey(menuItem))
+        throw new Error(`Unknown menu item '${menuItem}'`);
+        
+      if (this._vmContent)
+        this._vmContent.destroy();
+      this._vmContent = this.viewCreators.get(menuItem)(this);
+      this._vmContent.render();
+      this.$el.find(".content").append(this._vmContent.$el);
     }
   }
-}
-
-function Activator<T>(type: {new(): T}) : T {
-  return new type();
 }
 
 import Data = Client.Common.Data;
@@ -46,50 +54,9 @@ window.onload = () => {
   var main = new Client.Views.Main();
   main.render();
   $("body").append(main.$el);
-  main.postRender();
-  
-  // $(".easyui-layout .easyui-panel").panel();
-  // $(".easyui-layout .easyui-tree").tree({
-  //   "data": [{
-  //     "id": 1,
-  //     "text": "Production",
-  //     "children": [{
-  //       "id": 11,
-  //       "text": "Total Domination",
-  //       "children": [{
-  //         "id": 111,
-  //         "text": "Manage"
-  //       }, {
-  //         "id": 112,
-  //         "text": "Config"
-  //       }, {
-  //         "id": 113,
-  //         "text": "Logs"
-  //       }, {
-  //         "id": 114,
-  //         "text": "Perf"
-  //       }, {
-  //         "id": 115,
-  //         "text": "Servers"
-  //       }]
-  //     }, {
-  //       "id": 12,
-  //       "text": "Elves"
-  //     }, {
-  //       "id": 13,
-  //       "text": "Pirates"
-  //     }, {
-  //       "id": 14,
-  //       "text": "Sparta"
-  //     }, {
-  //       "id": 15,
-  //       "text": "Nords"
-  //     }]
-  //   }]
-  // });
-
-  console.log(Data);
-
+  // main.postRender();
+// $("#tt").tree();
+// $("#grd").datagrid();
   // Promise.all([
   //   Data.users.initialize(),
   //   Data.apps.initialize()
@@ -99,13 +66,3 @@ window.onload = () => {
   //   console.log(Data.users.all().length);
   // });
 };
-
-var template: string = `
-  <div class="easyui-layout" style="height:100%;">
-    <div data-options="region:'south',split:true" style="height:50px;">
-    </div>
-    <div data-options="region:'west',split:true" class="west" style="width:300px;">
-    </div>
-    <div class="center" data-options="region:'center',title:''"></div>
-  </div>
-`;

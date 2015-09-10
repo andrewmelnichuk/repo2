@@ -1,4 +1,4 @@
-module Events {
+module Client.Events {
 
   import IDictionary = Client.Common.IDictionary;
 
