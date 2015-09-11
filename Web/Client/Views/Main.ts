@@ -1,4 +1,4 @@
-///<reference path="../_references.ts"/>
+///<reference path="../Common/Dictionary.ts"/>
 
 module Client.Views {
 
@@ -31,7 +31,7 @@ module Client.Views {
     }
 
     public initialize() {
-      EventBus.Instance.on("ui.content-view", "change", this, this.setContentView);
+      EventBus.on("ui.views.top-nav.menu-item", "change", this, this.setContentView);
     }
     
     private setContentView(menuItem: string) {
@@ -54,6 +54,9 @@ window.onload = () => {
   var main = new Client.Views.Main();
   main.render();
   $("body").append(main.$el);
+  
+  //console.log(new A().f == new A().f);
+  
   // main.postRender();
 // $("#tt").tree();
 // $("#grd").datagrid();

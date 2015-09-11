@@ -11,7 +11,7 @@ module Client.Common {
     keys(): TKey[];
     values(): TValue[];
   }
-  
+
   export class Dictionary<TKey, TValue> implements IDictionary2<TKey, TValue> {
 
     private _keys: TKey[] = [];

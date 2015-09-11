@@ -1,49 +1,53 @@
+///<reference path="../Common/Dictionary.ts" />
+
 module Client.Events {
 
-  import IDictionary = Client.Common.IDictionary;
+  import Dictionary = Client.Common.Dictionary;
 
   export class EventBus {
-    
-    private static _instance: EventBus;
-    
-    public static get Instance(): EventBus {
-      return (!EventBus._instance)
-        ? (EventBus._instance = new EventBus())
-        : EventBus._instance;
+
+    private static _handlers2 = new Dictionary<string, Dictionary<string, Handler[]>>();
+
+    public static on(channel: string, event: string, scope: Object, callback: Function) {
+      if (!this._handlers2.containsKey(channel))
+        this._handlers2.add(channel, new Dictionary<string, Handler[]>());
+      if (!this._handlers2.get(channel).containsKey(event))
+        this._handlers2.get(channel).add(event, new Array<Handler>());
+      this._handlers2.get(channel).get(event).push({scope: scope, callback: callback});
     }
 
-    private _handlers: IDictionary<IDictionary<Array<IEventHandler>>> = {};
-    
-    public on(channel: string, event: string, ctx: Object, callback: Function) {
-      this._handlers[channel] = this._handlers[channel] || {};
-      this._handlers[channel][event] =  this._handlers[channel][event] || new Array<IEventHandler>();
-
-      this._handlers[channel][event].push({ctx: ctx, callback: callback});
-    }
-    
-    public off(channel: string, event: string, ctx: Object, callback: Function) {
-      var handlers = (this._handlers[channel] || {})[event];
-      if (!handlers)
-        return;
-      for (var i = 0; i < handlers.length; i++) {
-        if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
-          handlers.splice(i, 1);
-          break;
+    public static off(channel: string, event: string, scope: Object, callback: Function) {
+      if (this._handlers2.containsKey(channel) && this._handlers2.get(channel).containsKey(event)) {
+        var handlers = this._handlers2.get(channel).get(event);
+        for (var i = 0; i < handlers.length; i++) {
+          if (handlers[i].scope == scope && handlers[i].callback == callback) {
+            handlers.splice(i, 1);
+            break;
+          }
         }
       }
     }
-    
-    public fire(channel: string, event: string, ...args: any[]) {
-      var handlers = (this._handlers[channel] || {})[event];
-      if (handlers)
-        handlers.forEach((handler:IEventHandler) => handler.callback.call(handler.ctx, args));
-      else
-        console.log("handlers for channel '%s', event '%s' not found", channel, event);
+
+    public static raise(channel: string, event: string, ...args: any[]) {
+      var events = this._handlers2.get(channel);
+      if (!events) {
+        console.log(`EventManager: invalid channel '${channel}'`);
+        return;
+      }
+      
+      var handlers = events.get(event);
+      if (!handlers) {
+        console.log(`EventManager: invalid event '${event}'`);
+        return;
+      }
+
+      handlers.forEach((handler:Handler) => handler.callback.call(handler.scope, args));
+      console.log(`EventManager: ${channel} -> ${event}, ${handlers.length} handler(s) called`);
     }
   }
   
-  interface IEventHandler {
-    ctx: Object;
+  interface Handler {
+    scope: Object;
     callback: Function;
   }
 }

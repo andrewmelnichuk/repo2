@@ -20,10 +20,9 @@ module Client.Views {
     }
 
     private menuItemClick(event: JQueryEventObject) {
-      console.log(this);
       var menuItem = $(event.target).attr("data-menu-item");
       this.setActiveMenuItem(menuItem);
-      EventBus.Instance.fire("ui.content-view", "change", menuItem);
+      EventBus.raise("ui.views.top-nav.menu-item", "change", menuItem);
     }
 
     private setActiveMenuItem(item: string) {

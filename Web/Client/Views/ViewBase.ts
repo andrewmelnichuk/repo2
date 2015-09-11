@@ -1,3 +1,5 @@
+///<reference path="../Events/EventBus.ts" />
+
 module Client.Views {
 
   import Dictionary = Client.Common.Dictionary;
@@ -135,7 +137,7 @@ module Client.Views {
       for (var item in this._busEvents) {
         if (this._busEvents.hasOwnProperty(item)) {
           var result = this.parse(item);
-          EventBus.Instance.on(result.target, result.event, this, this._busEvents[item]); 
+          EventBus.on(result.target, result.event, this, this._busEvents[item]); 
         }
       }
     }
@@ -147,9 +149,9 @@ module Client.Views {
           this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
         }
       }
-      this._viewEvents.forEach(event => {
-        this._$el.off(event.event, event.selector, event.handler);
-      });
+      // this._viewEvents.forEach(event => {
+      //   this._$el.off(event.event, event.selector, event.handler);
+      // });
     }
 
     private parse(item: string) : {event: string, target: string} {

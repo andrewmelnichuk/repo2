@@ -35,7 +35,7 @@ function property(target, property) {
                     var oldVal = value;
                     value = newVal;
                     var channel = target.constructor["eventsChannel"];
-                    Client.Events.EventBus.Instance.fire(channel, "change", target, oldVal, newVal);
+                    Client.Events.EventBus.raise(channel, "change", target, oldVal, newVal);
                 }
             },
             enumerable: true,
@@ -70,8 +70,98 @@ var Utils = (function () {
 })();
 var Client;
 (function (Client) {
+    var Common;
+    (function (Common) {
+        var Dictionary = (function () {
+            function Dictionary() {
+                this._keys = [];
+                this._values = [];
+            }
+            Dictionary.prototype.get = function (key) {
+                return this[key.toString()];
+            };
+            Dictionary.prototype.add = function (key, value) {
+                this[key.toString()] = value;
+                this._keys.push(key);
+                this._values.push(value);
+            };
+            Dictionary.prototype.remove = function (key) {
+                var index = this._keys.indexOf(key, 0);
+                this._keys.splice(index, 1);
+                this._values.splice(index, 1);
+                delete this[key.toString()];
+            };
+            Dictionary.prototype.keys = function () {
+                return this._keys;
+            };
+            Dictionary.prototype.values = function () {
+                return this._values;
+            };
+            Dictionary.prototype.containsKey = function (key) {
+                return this[key.toString()];
+            };
+            return Dictionary;
+        })();
+        Common.Dictionary = Dictionary;
+    })(Common = Client.Common || (Client.Common = {}));
+})(Client || (Client = {}));
+///<reference path="../Common/Dictionary.ts" />
+var Client;
+(function (Client) {
+    var Events;
+    (function (Events) {
+        var Dictionary = Client.Common.Dictionary;
+        var EventBus = (function () {
+            function EventBus() {
+            }
+            EventBus.on = function (channel, event, scope, callback) {
+                if (!this._handlers2.containsKey(channel))
+                    this._handlers2.add(channel, new Dictionary());
+                if (!this._handlers2.get(channel).containsKey(event))
+                    this._handlers2.get(channel).add(event, new Array());
+                this._handlers2.get(channel).get(event).push({ scope: scope, callback: callback });
+            };
+            EventBus.off = function (channel, event, scope, callback) {
+                if (this._handlers2.containsKey(channel) && this._handlers2.get(channel).containsKey(event)) {
+                    var handlers = this._handlers2.get(channel).get(event);
+                    for (var i = 0; i < handlers.length; i++) {
+                        if (handlers[i].scope == scope && handlers[i].callback == callback) {
+                            handlers.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            };
+            EventBus.raise = function (channel, event) {
+                var args = [];
+                for (var _i = 2; _i < arguments.length; _i++) {
+                    args[_i - 2] = arguments[_i];
+                }
+                var events = this._handlers2.get(channel);
+                if (!events) {
+                    console.log("EventManager: invalid channel '" + channel + "'");
+                    return;
+                }
+                var handlers = events.get(event);
+                if (!handlers) {
+                    console.log("EventManager: invalid event '" + event + "'");
+                    return;
+                }
+                handlers.forEach(function (handler) { return handler.callback.call(handler.scope, args); });
+                console.log("EventManager: " + channel + " -> " + event + ", " + handlers.length + " handler(s) called");
+            };
+            EventBus._handlers2 = new Dictionary();
+            return EventBus;
+        })();
+        Events.EventBus = EventBus;
+    })(Events = Client.Events || (Client.Events = {}));
+})(Client || (Client = {}));
+///<reference path="../Events/EventBus.ts" />
+var Client;
+(function (Client) {
     var Views;
     (function (Views) {
+        var EventBus = Client.Events.EventBus;
         var ViewBase = (function () {
             function ViewBase(parent) {
                 this._views = [];
@@ -83,6 +173,8 @@ var Client;
                 this._$el = $("<div></div>");
                 this._events = this.events();
                 this.bindEvents();
+                this.bindViewEvents();
+                this.bindBusEvents();
                 this.initialize();
             }
             Object.defineProperty(ViewBase.prototype, "$el", {
@@ -151,26 +243,46 @@ var Client;
                     _this._$el.on(event.event, event.selector, event.handler.bind(_this));
                 });
             };
-            ViewBase.prototype.bindEvents2 = function () {
-                var viewEvents = this.viewEvents();
-                for (var item in viewEvents) {
-                    if (viewEvents.hasOwnProperty(item)) {
-                        var result = this.parse(item);
-                        this._$el.on(result.event, result.selector, viewEvents[item].bind(this));
-                    }
-                }
-            };
-            ViewBase.prototype.parse = function (item) {
-                return {
-                    event: "event",
-                    selector: "selector"
-                };
-            };
             ViewBase.prototype.unbindEvents = function () {
                 var _this = this;
                 this._events.forEach(function (event) {
                     _this._$el.off(event.event, event.selector, event.handler);
                 });
+            };
+            ViewBase.prototype.bindViewEvents = function () {
+                if (!this._viewEvents)
+                    this.parse;
+                for (var item in this._viewEvents) {
+                    if (this._viewEvents.hasOwnProperty(item)) {
+                        var result = this.parse(item);
+                        this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
+                    }
+                }
+            };
+            ViewBase.prototype.bindBusEvents = function () {
+                for (var item in this._busEvents) {
+                    if (this._busEvents.hasOwnProperty(item)) {
+                        var result = this.parse(item);
+                        EventBus.on(result.target, result.event, this, this._busEvents[item]);
+                    }
+                }
+            };
+            ViewBase.prototype.unbindViewEvents = function () {
+                for (var item in this._viewEvents) {
+                    if (this._viewEvents.hasOwnProperty(item)) {
+                        var result = this.parse(item);
+                        this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
+                    }
+                }
+                // this._viewEvents.forEach(event => {
+                //   this._$el.off(event.event, event.selector, event.handler);
+                // });
+            };
+            ViewBase.prototype.parse = function (item) {
+                return {
+                    event: "event",
+                    target: "selector"
+                };
             };
             return ViewBase;
         })();
@@ -182,43 +294,6 @@ var a;
 // a = new Date();
 a = 1;
 a = "string";
-var Client;
-(function (Client) {
-    var Common;
-    (function (Common) {
-        var Dictionary = (function () {
-            function Dictionary() {
-                this._keys = [];
-                this._values = [];
-            }
-            Dictionary.prototype.get = function (key) {
-                return this[key.toString()];
-            };
-            Dictionary.prototype.add = function (key, value) {
-                this[key.toString()] = value;
-                this._keys.push(key);
-                this._values.push(value);
-            };
-            Dictionary.prototype.remove = function (key) {
-                var index = this._keys.indexOf(key, 0);
-                this._keys.splice(index, 1);
-                this._values.splice(index, 1);
-                delete this[key.toString()];
-            };
-            Dictionary.prototype.keys = function () {
-                return this._keys;
-            };
-            Dictionary.prototype.values = function () {
-                return this._values;
-            };
-            Dictionary.prototype.containsKey = function (key) {
-                return this[key.toString()];
-            };
-            return Dictionary;
-        })();
-        Common.Dictionary = Dictionary;
-    })(Common = Client.Common || (Client.Common = {}));
-})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Models;
@@ -528,55 +603,6 @@ var Client;
 })(Client || (Client = {}));
 var Client;
 (function (Client) {
-    var Events;
-    (function (Events) {
-        var EventBus = (function () {
-            function EventBus() {
-                this._handlers = {};
-            }
-            Object.defineProperty(EventBus, "Instance", {
-                get: function () {
-                    return (!EventBus._instance)
-                        ? (EventBus._instance = new EventBus())
-                        : EventBus._instance;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            EventBus.prototype.on = function (channel, event, ctx, callback) {
-                this._handlers[channel] = this._handlers[channel] || {};
-                this._handlers[channel][event] = this._handlers[channel][event] || new Array();
-                this._handlers[channel][event].push({ ctx: ctx, callback: callback });
-            };
-            EventBus.prototype.off = function (channel, event, ctx, callback) {
-                var handlers = (this._handlers[channel] || {})[event];
-                if (!handlers)
-                    return;
-                for (var i = 0; i < handlers.length; i++) {
-                    if (handlers[i].ctx == ctx && handlers[i].callback == callback) {
-                        handlers.splice(i, 1);
-                        break;
-                    }
-                }
-            };
-            EventBus.prototype.fire = function (channel, event) {
-                var args = [];
-                for (var _i = 2; _i < arguments.length; _i++) {
-                    args[_i - 2] = arguments[_i];
-                }
-                var handlers = (this._handlers[channel] || {})[event];
-                if (handlers)
-                    handlers.forEach(function (handler) { return handler.callback.call(handler.ctx, args); });
-                else
-                    console.log("handlers for channel '%s', event '%s' not found", channel, event);
-            };
-            return EventBus;
-        })();
-        Events.EventBus = EventBus;
-    })(Events = Client.Events || (Client.Events = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
     var Views;
     (function (Views) {
         var ExplorerView = (function (_super) {
@@ -597,7 +623,7 @@ var Client;
         Views.ExplorerView = ExplorerView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-///<reference path="../_references.ts"/>
+///<reference path="../Common/Dictionary.ts"/>
 var Client;
 (function (Client) {
     var Views;
@@ -620,7 +646,7 @@ var Client;
                 this.$el.find(".container .topnav").append(this._vwTopNav.$el);
             };
             Main.prototype.initialize = function () {
-                EventBus.Instance.on("ui.content-view", "change", this, this.setContentView);
+                EventBus.on("ui.views.top-nav.menu-item", "change", this, this.setContentView);
             };
             Main.prototype.setContentView = function (menuItem) {
                 if (!this.viewCreators.containsKey(menuItem))
@@ -642,6 +668,7 @@ window.onload = function () {
     var main = new Client.Views.Main();
     main.render();
     $("body").append(main.$el);
+    //console.log(new A().f == new A().f);
     // main.postRender();
     // $("#tt").tree();
     // $("#grd").datagrid();
@@ -718,10 +745,9 @@ var Client;
                 ];
             };
             TopNav.prototype.menuItemClick = function (event) {
-                console.log(this);
                 var menuItem = $(event.target).attr("data-menu-item");
                 this.setActiveMenuItem(menuItem);
-                EventBus.Instance.fire("ui.content-view", "change", menuItem);
+                EventBus.raise("ui.views.top-nav.menu-item", "change", menuItem);
             };
             TopNav.prototype.setActiveMenuItem = function (item) {
                 if (this.$activeMenuItem)
