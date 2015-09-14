@@ -4,33 +4,38 @@ module Client.Views {
 
   import Dictionary = Client.Common.Dictionary;
   import EventBus = Client.Events.EventBus;
-  
-  export interface IViewEvent {
-    event: string;
-    selector: string;
-    handler: (eventObject: JQueryEventObject, ...args: any[]) => any;
+
+  class ViewEventDef {
+    constructor (
+      public event: string, 
+      public selector: string, 
+      public handler: (eventObject: JQueryEventObject, ...args: any[]) => any
+    ){}
   }
   
-  interface ViewEvent {
-    event: string;
-    selector: string;
-    handler: (eventObject: JQueryEventObject, ...args: any[]) => any;
+  class MgrEventDef {
+    constructor(
+      public event: string,
+      public channel: string,
+      public handler: (...args: any[]) => any
+    ){}
   }
-  
-  interface BusEvent {
-    event: string;
-    channel: string;
-    handler: (...args: any[]) => void;
+
+  class EventDef {
+    constructor(
+      public event: string,
+      public target: string,
+      public handler: (...args: any[]) => any
+    ){}
   }
-  
+
   export class ViewBase {
 
     private _$el: JQuery;
     private _parent: ViewBase;
     private _views: Array<ViewBase> = [];
-    private _events: Array<IViewEvent> = [];
-    private _viewEvents: {event: string, target: string, handler: Function};
-    private _busEvents: Object;
+    private _viewEventDefs: EventDef[];
+    private _mgrEventDefs: EventDef[];
 
     constructor(parent?: ViewBase) {
       if (parent) {
@@ -38,11 +43,8 @@ module Client.Views {
         this._parent.addChild(this);
       }
       this._$el = $("<div></div>");
-      this._events = this.events();
-      this.bindEvents();
       this.bindViewEvents();
-      this.bindBusEvents();
-      this.initialize();
+      this.bindMgrEvents();
     }
 
     public get $el(): JQuery {
@@ -53,29 +55,16 @@ module Client.Views {
       return this._views;
     }
 
-    protected initialize() {
-    }
-
-    public events(): Array<IViewEvent> {
-      return [];
+    protected viewEvents(): Object {
+      return {};
     }
     
-    public viewEvents(): Object {
-      return {
-        "click .btn" : () => 1,
-        "click .lnk" : () => 2
-      };
+    protected mgrEvents(): Object {
+      return {};
     }
     
-    public busEvents(): Object {
-      return {
-        "ui.content-view change" : () => 1,
-        "click .lnk" : () => 2
-      };
-    } 
-
-    public render() {
-      this._views.forEach(view => view.render());
+    public render(): ViewBase {
+      return this;
     }
 
     public postRender() {
@@ -96,7 +85,8 @@ module Client.Views {
       this._views.forEach(view => view.destroy());
       if (this._parent)
         this._parent.removeChild(this);
-      this.unbindEvents();
+      this.unbindViewEvents();
+      this.unbindMgrEvents();
       this._$el.remove();
     }
     
@@ -110,55 +100,59 @@ module Client.Views {
         this._views.splice(idx, 1);
     }
     
-    private bindEvents(): void {
-      this._events.forEach(event => {
-        this._$el.on(event.event, event.selector, event.handler.bind(this));
-      });
-    }
-
-    private unbindEvents() {
-      this._events.forEach(event => {
-        this._$el.off(event.event, event.selector, event.handler);
-      });
-    }
-
     private bindViewEvents() {
-      if (!this._viewEvents)
-        this.parse
-      for (var item in this._viewEvents) {
-        if (this._viewEvents.hasOwnProperty(item)) {
-          var result = this.parse(item);
-          this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
-        }
-      }
+      if (!this._viewEventDefs)
+        this._viewEventDefs = this.parseEventsObj(this.viewEvents());
+      for (var def of this._viewEventDefs)
+        this._$el.on(def.event, def.target, def.handler);
     }
 
-    private bindBusEvents() {
-      for (var item in this._busEvents) {
-        if (this._busEvents.hasOwnProperty(item)) {
-          var result = this.parse(item);
-          EventBus.on(result.target, result.event, this, this._busEvents[item]); 
-        }
+    private bindMgrEvents() {
+      if (!this._mgrEventDefs)
+        this._mgrEventDefs = this.parseEventsObj(this.mgrEvents());
+      for (var def of this._mgrEventDefs) {
+        EventBus.on(def.target, def.event, this, def.handler); 
       }
     }
 
     private unbindViewEvents() {
-      for (var item in this._viewEvents) {
-        if (this._viewEvents.hasOwnProperty(item)) {
-          var result = this.parse(item);
-          this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
-        }
-      }
-      // this._viewEvents.forEach(event => {
-      //   this._$el.off(event.event, event.selector, event.handler);
-      // });
+      for (var def of this._viewEventDefs)
+        this._$el.on(def.event, def.target, def.handler);
     }
 
-    private parse(item: string) : {event: string, target: string} {
-      return {
-        event: "event",
-        target: "selector"
-      };
+    private unbindMgrEvents() {
+      for (var def of this._mgrEventDefs)
+        EventBus.off(def.target, def.event, this, def.handler);
+    }
+
+    private parseEventsObj(eventsObj: Object): EventDef[] {
+      var result = new Array<EventDef>();
+      for (var key in eventsObj) {
+        if (!eventsObj.hasOwnProperty(key))
+          continue;
+        
+        var eventDef = (<string>key).trim();
+        var idx = eventDef.indexOf(" ");
+        var event, selector, handler;
+        if (idx >= 0) {
+          event = eventDef.substr(0, idx);
+          selector = eventDef.substr(idx + 1);
+        }
+        else {
+          event = eventDef;
+        }
+        handler = eventsObj[key];
+        
+        if (event == "")
+          throw new Error(`Event definition '${eventDef}' has empty event.`);
+        if (selector == "")
+          selector = undefined;
+        if (typeof handler != "function")
+          throw new Error(`Event definition '${eventDef}' has invalid handler.`);
+
+        result.push(new EventDef(event, selector, (...args:any[]) => handler.call(this, ...args)));
+      }
+      return result;
     }
   }
 }

@@ -11,12 +11,13 @@ module Client.Views {
     public render() {
       super.render();
       this.$el.html(this.template);
+      return this;
     }
 
-    public events(): Array<IViewEvent> {
-      return [
-        {event: "click", selector: "a[data-menu-item]", handler: this.menuItemClick},
-      ];
+    protected viewEvents() {
+      return {
+        "click a[data-menu-item]": this.menuItemClick,
+      };
     }
 
     private menuItemClick(event: JQueryEventObject) {

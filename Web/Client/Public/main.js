@@ -73,9 +73,15 @@ var Client;
     var Common;
     (function (Common) {
         var Dictionary = (function () {
-            function Dictionary() {
+            function Dictionary(init) {
                 this._keys = [];
                 this._values = [];
+                if (!init)
+                    return;
+                for (var key in init) {
+                    if (init.hasOwnProperty(key))
+                        this.add(key, init[key]);
+                }
             }
             Dictionary.prototype.get = function (key) {
                 return this[key.toString()];
@@ -147,7 +153,7 @@ var Client;
                     console.log("EventManager: invalid event '" + event + "'");
                     return;
                 }
-                handlers.forEach(function (handler) { return handler.callback.call(handler.scope, args); });
+                handlers.forEach(function (handler) { return (_a = handler.callback).call.apply(_a, [handler.scope].concat(args)); var _a; });
                 console.log("EventManager: " + channel + " -> " + event + ", " + handlers.length + " handler(s) called");
             };
             EventBus._handlers2 = new Dictionary();
@@ -162,20 +168,40 @@ var Client;
     var Views;
     (function (Views) {
         var EventBus = Client.Events.EventBus;
+        var ViewEventDef = (function () {
+            function ViewEventDef(event, selector, handler) {
+                this.event = event;
+                this.selector = selector;
+                this.handler = handler;
+            }
+            return ViewEventDef;
+        })();
+        var MgrEventDef = (function () {
+            function MgrEventDef(event, channel, handler) {
+                this.event = event;
+                this.channel = channel;
+                this.handler = handler;
+            }
+            return MgrEventDef;
+        })();
+        var EventDef = (function () {
+            function EventDef(event, target, handler) {
+                this.event = event;
+                this.target = target;
+                this.handler = handler;
+            }
+            return EventDef;
+        })();
         var ViewBase = (function () {
             function ViewBase(parent) {
                 this._views = [];
-                this._events = [];
                 if (parent) {
                     this._parent = parent;
                     this._parent.addChild(this);
                 }
                 this._$el = $("<div></div>");
-                this._events = this.events();
-                this.bindEvents();
                 this.bindViewEvents();
-                this.bindBusEvents();
-                this.initialize();
+                this.bindMgrEvents();
             }
             Object.defineProperty(ViewBase.prototype, "$el", {
                 get: function () {
@@ -191,25 +217,14 @@ var Client;
                 enumerable: true,
                 configurable: true
             });
-            ViewBase.prototype.initialize = function () {
-            };
-            ViewBase.prototype.events = function () {
-                return [];
-            };
             ViewBase.prototype.viewEvents = function () {
-                return {
-                    "click .btn": function () { return 1; },
-                    "click .lnk": function () { return 2; }
-                };
+                return {};
             };
-            ViewBase.prototype.busEvents = function () {
-                return {
-                    "ui.content-view change": function () { return 1; },
-                    "click .lnk": function () { return 2; }
-                };
+            ViewBase.prototype.mgrEvents = function () {
+                return {};
             };
             ViewBase.prototype.render = function () {
-                this._views.forEach(function (view) { return view.render(); });
+                return this;
             };
             ViewBase.prototype.postRender = function () {
                 this._views.forEach(function (view) { return view.postRender(); });
@@ -226,7 +241,8 @@ var Client;
                 this._views.forEach(function (view) { return view.destroy(); });
                 if (this._parent)
                     this._parent.removeChild(this);
-                this.unbindEvents();
+                this.unbindViewEvents();
+                this.unbindMgrEvents();
                 this._$el.remove();
             };
             ViewBase.prototype.addChild = function (view) {
@@ -237,52 +253,66 @@ var Client;
                 if (idx >= 0)
                     this._views.splice(idx, 1);
             };
-            ViewBase.prototype.bindEvents = function () {
-                var _this = this;
-                this._events.forEach(function (event) {
-                    _this._$el.on(event.event, event.selector, event.handler.bind(_this));
-                });
-            };
-            ViewBase.prototype.unbindEvents = function () {
-                var _this = this;
-                this._events.forEach(function (event) {
-                    _this._$el.off(event.event, event.selector, event.handler);
-                });
-            };
             ViewBase.prototype.bindViewEvents = function () {
-                if (!this._viewEvents)
-                    this.parse;
-                for (var item in this._viewEvents) {
-                    if (this._viewEvents.hasOwnProperty(item)) {
-                        var result = this.parse(item);
-                        this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
-                    }
+                if (!this._viewEventDefs)
+                    this._viewEventDefs = this.parseEventsObj(this.viewEvents());
+                for (var _i = 0, _a = this._viewEventDefs; _i < _a.length; _i++) {
+                    var def = _a[_i];
+                    this._$el.on(def.event, def.target, def.handler);
                 }
             };
-            ViewBase.prototype.bindBusEvents = function () {
-                for (var item in this._busEvents) {
-                    if (this._busEvents.hasOwnProperty(item)) {
-                        var result = this.parse(item);
-                        EventBus.on(result.target, result.event, this, this._busEvents[item]);
-                    }
+            ViewBase.prototype.bindMgrEvents = function () {
+                if (!this._mgrEventDefs)
+                    this._mgrEventDefs = this.parseEventsObj(this.mgrEvents());
+                for (var _i = 0, _a = this._mgrEventDefs; _i < _a.length; _i++) {
+                    var def = _a[_i];
+                    EventBus.on(def.target, def.event, this, def.handler);
                 }
             };
             ViewBase.prototype.unbindViewEvents = function () {
-                for (var item in this._viewEvents) {
-                    if (this._viewEvents.hasOwnProperty(item)) {
-                        var result = this.parse(item);
-                        this._$el.on(result.event, result.target, this._viewEvents[item].bind(this));
-                    }
+                for (var _i = 0, _a = this._viewEventDefs; _i < _a.length; _i++) {
+                    var def = _a[_i];
+                    this._$el.on(def.event, def.target, def.handler);
                 }
-                // this._viewEvents.forEach(event => {
-                //   this._$el.off(event.event, event.selector, event.handler);
-                // });
             };
-            ViewBase.prototype.parse = function (item) {
-                return {
-                    event: "event",
-                    target: "selector"
-                };
+            ViewBase.prototype.unbindMgrEvents = function () {
+                for (var _i = 0, _a = this._mgrEventDefs; _i < _a.length; _i++) {
+                    var def = _a[_i];
+                    EventBus.off(def.target, def.event, this, def.handler);
+                }
+            };
+            ViewBase.prototype.parseEventsObj = function (eventsObj) {
+                var _this = this;
+                var result = new Array();
+                for (var key in eventsObj) {
+                    if (!eventsObj.hasOwnProperty(key))
+                        continue;
+                    var eventDef = key.trim();
+                    var idx = eventDef.indexOf(" ");
+                    var event, selector, handler;
+                    if (idx >= 0) {
+                        event = eventDef.substr(0, idx);
+                        selector = eventDef.substr(idx + 1);
+                    }
+                    else {
+                        event = eventDef;
+                    }
+                    handler = eventsObj[key];
+                    if (event == "")
+                        throw new Error("Event definition '" + eventDef + "' has empty event.");
+                    if (selector == "")
+                        selector = undefined;
+                    if (typeof handler != "function")
+                        throw new Error("Event definition '" + eventDef + "' has invalid handler.");
+                    result.push(new EventDef(event, selector, function () {
+                        var args = [];
+                        for (var _i = 0; _i < arguments.length; _i++) {
+                            args[_i - 0] = arguments[_i];
+                        }
+                        return handler.call.apply(handler, [_this].concat(args));
+                    }));
+                }
+                return result;
             };
             return ViewBase;
         })();
@@ -614,9 +644,9 @@ var Client;
             ExplorerView.prototype.initialize = function () {
             };
             ExplorerView.prototype.render = function () {
-                _super.prototype.render.call(this);
                 this.$el.html(this.template);
                 this.$el.find("#jstree").jstree();
+                return this;
             };
             return ExplorerView;
         })(Client.Views.ViewBase);
@@ -629,24 +659,26 @@ var Client;
     var Views;
     (function (Views) {
         var Dictionary = Client.Common.Dictionary;
-        var EventBus = Client.Events.EventBus;
         var Main = (function (_super) {
             __extends(Main, _super);
             function Main() {
-                _super.call(this);
+                _super.apply(this, arguments);
                 this._vwTopNav = new Views.TopNav(this);
-                this.viewCreators = new Dictionary();
-                this.viewCreators.add("explore", function (parent) { return new Views.ExplorerView(parent); });
-                this.viewCreators.add("manage", function (parent) { return new Views.ManageView(parent); });
-                this.viewCreators.add("settings", function (parent) { return new Views.SettingsView(parent); });
+                this.viewCreators = new Dictionary({
+                    "explore": function (parent) { return new Views.ExplorerView(parent); },
+                    "manage": function (parent) { return new Views.ManageView(parent); },
+                    "settings": function (parent) { return new Views.SettingsView(parent); }
+                });
             }
             Main.prototype.render = function () {
-                _super.prototype.render.call(this);
                 this.$el.html("\n        <div class=\"container\">\n          <div class=\"topnav\"></div>\n          <div class=\"content\"></div>\n        </div>\n      ");
-                this.$el.find(".container .topnav").append(this._vwTopNav.$el);
+                this.$el.find(".container .topnav").append(this._vwTopNav.render().$el);
+                return this;
             };
-            Main.prototype.initialize = function () {
-                EventBus.on("ui.views.top-nav.menu-item", "change", this, this.setContentView);
+            Main.prototype.mgrEvents = function () {
+                return {
+                    "change ui.views.top-nav.menu-item": this.setContentView
+                };
             };
             Main.prototype.setContentView = function (menuItem) {
                 if (!this.viewCreators.containsKey(menuItem))
@@ -696,6 +728,7 @@ var Client;
             ManageView.prototype.render = function () {
                 _super.prototype.render.call(this);
                 this.$el.html(this.template);
+                return this;
             };
             return ManageView;
         })(Client.Views.ViewBase);
@@ -717,6 +750,7 @@ var Client;
             SettingsView.prototype.render = function () {
                 _super.prototype.render.call(this);
                 this.$el.html(this.template);
+                return this;
             };
             return SettingsView;
         })(Client.Views.ViewBase);
@@ -738,11 +772,12 @@ var Client;
             TopNav.prototype.render = function () {
                 _super.prototype.render.call(this);
                 this.$el.html(this.template);
+                return this;
             };
-            TopNav.prototype.events = function () {
-                return [
-                    { event: "click", selector: "a[data-menu-item]", handler: this.menuItemClick },
-                ];
+            TopNav.prototype.viewEvents = function () {
+                return {
+                    "click a[data-menu-item]": this.menuItemClick,
+                };
             };
             TopNav.prototype.menuItemClick = function (event) {
                 var menuItem = $(event.target).attr("data-menu-item");

@@ -17,6 +17,14 @@ module Client.Common {
     private _keys: TKey[] = [];
     private _values: TValue[] = [];
 
+    constructor(init?: Object) {
+      if (!init) return;
+      for (var key in init) {
+        if (init.hasOwnProperty(key))
+          this.add(key, init[key]);
+      }
+    }
+
     public get(key: TKey): TValue {
       return this[key.toString()];
     }

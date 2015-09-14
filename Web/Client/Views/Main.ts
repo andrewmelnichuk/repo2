@@ -10,28 +10,27 @@ module Client.Views {
     private _vwTopNav = new TopNav(this);
     private _vmContent: ViewBase;
 
-    private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>();
+    private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>({
+      "explore": parent => new ExplorerView(parent),
+      "manage": parent => new ManageView(parent),
+      "settings": parent => new SettingsView(parent)
+    });
 
-    constructor() {
-      super();
-      this.viewCreators.add("explore", parent => new ExplorerView(parent));
-      this.viewCreators.add("manage", parent => new ManageView(parent));
-      this.viewCreators.add("settings", parent => new SettingsView(parent));
-    }
-    
     public render() {
-      super.render();
       this.$el.html(`
         <div class="container">
           <div class="topnav"></div>
           <div class="content"></div>
         </div>
       `);
-      this.$el.find(".container .topnav").append(this._vwTopNav.$el);
+      this.$el.find(".container .topnav").append(this._vwTopNav.render().$el);
+      return this;
     }
 
-    public initialize() {
-      EventBus.on("ui.views.top-nav.menu-item", "change", this, this.setContentView);
+    protected mgrEvents() {
+      return {
+        "change ui.views.top-nav.menu-item": this.setContentView
+      };
     }
     
     private setContentView(menuItem: string) {

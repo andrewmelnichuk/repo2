@@ -6,9 +6,9 @@ module Client.Views {
     }
 
     public render() {
-      super.render();
       this.$el.html(this.template);
       this.$el.find("#jstree").jstree();
+      return this;
     }
 
     private template: string = `

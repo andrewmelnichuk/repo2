@@ -41,7 +41,7 @@ module Client.Events {
         return;
       }
 
-      handlers.forEach((handler:Handler) => handler.callback.call(handler.scope, args));
+      handlers.forEach(handler => handler.callback.call(handler.scope, ...args));
       console.log(`EventManager: ${channel} -> ${event}, ${handlers.length} handler(s) called`);
     }
   }
