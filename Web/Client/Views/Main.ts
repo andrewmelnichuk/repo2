@@ -12,7 +12,7 @@ module Client.Views {
 
     private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>({
       "explore": parent => new ExplorerView(parent),
-      "manage": parent => new ManageView(parent),
+      "manage": parent => new Client.Views.Manage.ManageView(parent),
       "settings": parent => new SettingsView(parent)
     });
 

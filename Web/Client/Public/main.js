@@ -650,7 +650,7 @@ var Client;
                 this._vwTopNav = new Views.TopNav(this);
                 this.viewCreators = new Dictionary({
                     "explore": function (parent) { return new Views.ExplorerView(parent); },
-                    "manage": function (parent) { return new Views.ManageView(parent); },
+                    "manage": function (parent) { return new Client.Views.Manage.ManageView(parent); },
                     "settings": function (parent) { return new Views.SettingsView(parent); }
                 });
             }
@@ -695,28 +695,6 @@ window.onload = function () {
     //   console.log(Data.users.all().length);
     // });
 };
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var ManageView = (function (_super) {
-            __extends(ManageView, _super);
-            function ManageView() {
-                _super.apply(this, arguments);
-                this.template = "Manage view";
-            }
-            ManageView.prototype.initialize = function () {
-            };
-            ManageView.prototype.render = function () {
-                _super.prototype.render.call(this);
-                this.$el.html(this.template);
-                return this;
-            };
-            return ManageView;
-        })(Client.Views.ViewBase);
-        Views.ManageView = ManageView;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
 var Client;
 (function (Client) {
     var Views;
@@ -776,5 +754,28 @@ var Client;
             return TopNav;
         })(Views.ViewBase);
         Views.TopNav = TopNav;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var Manage;
+        (function (Manage) {
+            var ManageView = (function (_super) {
+                __extends(ManageView, _super);
+                function ManageView() {
+                    _super.apply(this, arguments);
+                    this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\">\n          <ul class=\"nav nav-pills nav-stacked\">\n            <li role=\"presentation\"><a href=\"#\">Applications</a></li>\n            <li role=\"presentation\"><a href=\"#\">Networks</a></li>\n            <li role=\"presentation\"><a href=\"#\">Clusters</a></li>\n            <li role=\"presentation\"><a href=\"#\">Groups</a></li>\n          </ul>\n        </div>\n        <div class=\"col-md-9\">\n          Content\n        </div>\n      </div>\n    ";
+                }
+                ManageView.prototype.render = function () {
+                    _super.prototype.render.call(this);
+                    this.$el.html(this.template);
+                    return this;
+                };
+                return ManageView;
+            })(Client.Views.ViewBase);
+            Manage.ManageView = ManageView;
+        })(Manage = Views.Manage || (Views.Manage = {}));
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
