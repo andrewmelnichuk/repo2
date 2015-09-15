@@ -1,8 +1,8 @@
-///<reference path="../Events/EventBus.ts" />
+///<reference path="../Events/EventManager.ts" />
 
 module Client.Views {
 
-  import EventBus = Client.Events.EventBus;
+  import EventMgr = Client.Events.EventManager;
 
   export class TopNav extends ViewBase {
 
@@ -23,7 +23,7 @@ module Client.Views {
     private menuItemClick(event: JQueryEventObject) {
       var menuItem = $(event.target).attr("data-menu-item");
       this.setActiveMenuItem(menuItem);
-      EventBus.raise("ui.views.top-nav.menu-item", "change", menuItem);
+      EventMgr.raise("ui.views.top-nav.menu-item", "change", menuItem);
     }
 
     private setActiveMenuItem(item: string) {

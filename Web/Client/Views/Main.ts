@@ -3,7 +3,7 @@
 module Client.Views {
 
   import Dictionary = Client.Common.Dictionary;
-  import EventBus = Client.Events.EventBus;
+  import EventMgr = Client.Events.EventManager;
 
   export class Main extends ViewBase {
 

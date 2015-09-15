@@ -35,7 +35,7 @@ function property(target, property) {
                     var oldVal = value;
                     value = newVal;
                     var channel = target.constructor["eventsChannel"];
-                    Client.Events.EventBus.raise(channel, "change", target, oldVal, newVal);
+                    Client.Events.EventManager.raise(channel, "change", target, oldVal, newVal);
                 }
             },
             enumerable: true,
@@ -117,19 +117,19 @@ var Client;
     var Events;
     (function (Events) {
         var Dictionary = Client.Common.Dictionary;
-        var EventBus = (function () {
-            function EventBus() {
+        var EventManager = (function () {
+            function EventManager() {
             }
-            EventBus.on = function (channel, event, scope, callback) {
-                if (!this._handlers2.containsKey(channel))
-                    this._handlers2.add(channel, new Dictionary());
-                if (!this._handlers2.get(channel).containsKey(event))
-                    this._handlers2.get(channel).add(event, new Array());
-                this._handlers2.get(channel).get(event).push({ scope: scope, callback: callback });
+            EventManager.on = function (channel, event, scope, callback) {
+                if (!this._handlers.containsKey(channel))
+                    this._handlers.add(channel, new Dictionary());
+                if (!this._handlers.get(channel).containsKey(event))
+                    this._handlers.get(channel).add(event, new Array());
+                this._handlers.get(channel).get(event).push({ scope: scope, callback: callback });
             };
-            EventBus.off = function (channel, event, scope, callback) {
-                if (this._handlers2.containsKey(channel) && this._handlers2.get(channel).containsKey(event)) {
-                    var handlers = this._handlers2.get(channel).get(event);
+            EventManager.off = function (channel, event, scope, callback) {
+                if (this._handlers.containsKey(channel) && this._handlers.get(channel).containsKey(event)) {
+                    var handlers = this._handlers.get(channel).get(event);
                     for (var i = 0; i < handlers.length; i++) {
                         if (handlers[i].scope == scope && handlers[i].callback == callback) {
                             handlers.splice(i, 1);
@@ -138,12 +138,12 @@ var Client;
                     }
                 }
             };
-            EventBus.raise = function (channel, event) {
+            EventManager.raise = function (channel, event) {
                 var args = [];
                 for (var _i = 2; _i < arguments.length; _i++) {
                     args[_i - 2] = arguments[_i];
                 }
-                var events = this._handlers2.get(channel);
+                var events = this._handlers.get(channel);
                 if (!events) {
                     console.log("EventManager: invalid channel '" + channel + "'");
                     return;
@@ -156,42 +156,18 @@ var Client;
                 handlers.forEach(function (handler) { return (_a = handler.callback).call.apply(_a, [handler.scope].concat(args)); var _a; });
                 console.log("EventManager: " + channel + " -> " + event + ", " + handlers.length + " handler(s) called");
             };
-            EventBus._handlers2 = new Dictionary();
-            return EventBus;
+            EventManager._handlers = new Dictionary();
+            return EventManager;
         })();
-        Events.EventBus = EventBus;
+        Events.EventManager = EventManager;
     })(Events = Client.Events || (Client.Events = {}));
 })(Client || (Client = {}));
-///<reference path="../Events/EventBus.ts" />
+///<reference path="../Events/EventManager.ts" />
 var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        var EventBus = Client.Events.EventBus;
-        var ViewEventDef = (function () {
-            function ViewEventDef(event, selector, handler) {
-                this.event = event;
-                this.selector = selector;
-                this.handler = handler;
-            }
-            return ViewEventDef;
-        })();
-        var MgrEventDef = (function () {
-            function MgrEventDef(event, channel, handler) {
-                this.event = event;
-                this.channel = channel;
-                this.handler = handler;
-            }
-            return MgrEventDef;
-        })();
-        var EventDef = (function () {
-            function EventDef(event, target, handler) {
-                this.event = event;
-                this.target = target;
-                this.handler = handler;
-            }
-            return EventDef;
-        })();
+        var EventMgr = Client.Events.EventManager;
         var ViewBase = (function () {
             function ViewBase(parent) {
                 this._views = [];
@@ -266,19 +242,19 @@ var Client;
                     this._mgrEventDefs = this.parseEventsObj(this.mgrEvents());
                 for (var _i = 0, _a = this._mgrEventDefs; _i < _a.length; _i++) {
                     var def = _a[_i];
-                    EventBus.on(def.target, def.event, this, def.handler);
+                    EventMgr.on(def.target, def.event, this, def.handler);
                 }
             };
             ViewBase.prototype.unbindViewEvents = function () {
                 for (var _i = 0, _a = this._viewEventDefs; _i < _a.length; _i++) {
                     var def = _a[_i];
-                    this._$el.on(def.event, def.target, def.handler);
+                    this._$el.off(def.event, def.target, def.handler);
                 }
             };
             ViewBase.prototype.unbindMgrEvents = function () {
                 for (var _i = 0, _a = this._mgrEventDefs; _i < _a.length; _i++) {
                     var def = _a[_i];
-                    EventBus.off(def.target, def.event, this, def.handler);
+                    EventMgr.off(def.target, def.event, this, def.handler);
                 }
             };
             ViewBase.prototype.parseEventsObj = function (eventsObj) {
@@ -289,10 +265,10 @@ var Client;
                         continue;
                     var eventDef = key.trim();
                     var idx = eventDef.indexOf(" ");
-                    var event, selector, handler;
+                    var event, target, handler;
                     if (idx >= 0) {
                         event = eventDef.substr(0, idx);
-                        selector = eventDef.substr(idx + 1);
+                        target = eventDef.substr(idx + 1);
                     }
                     else {
                         event = eventDef;
@@ -300,11 +276,11 @@ var Client;
                     handler = eventsObj[key];
                     if (event == "")
                         throw new Error("Event definition '" + eventDef + "' has empty event.");
-                    if (selector == "")
-                        selector = undefined;
+                    if (target == "")
+                        target = undefined;
                     if (typeof handler != "function")
                         throw new Error("Event definition '" + eventDef + "' has invalid handler.");
-                    result.push(new EventDef(event, selector, function () {
+                    result.push(new EventDef(event, target, function () {
                         var args = [];
                         for (var _i = 0; _i < arguments.length; _i++) {
                             args[_i - 0] = arguments[_i];
@@ -317,6 +293,14 @@ var Client;
             return ViewBase;
         })();
         Views.ViewBase = ViewBase;
+        var EventDef = (function () {
+            function EventDef(event, target, handler) {
+                this.event = event;
+                this.target = target;
+                this.handler = handler;
+            }
+            return EventDef;
+        })();
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 ///<reference path="Views/ViewBase.ts"/>
@@ -682,12 +666,11 @@ var Client;
             };
             Main.prototype.setContentView = function (menuItem) {
                 if (!this.viewCreators.containsKey(menuItem))
-                    throw new Error("Unknown menu item '" + menuItem + "'");
+                    throw new Error("Unknown menu item '" + menuItem + "'.");
                 if (this._vmContent)
                     this._vmContent.destroy();
                 this._vmContent = this.viewCreators.get(menuItem)(this);
-                this._vmContent.render();
-                this.$el.find(".content").append(this._vmContent.$el);
+                this.$el.find(".content").append(this._vmContent.render().$el);
             };
             return Main;
         })(Views.ViewBase);
@@ -698,8 +681,7 @@ var Data = Client.Common.Data;
 var User = Client.Models.User;
 window.onload = function () {
     var main = new Client.Views.Main();
-    main.render();
-    $("body").append(main.$el);
+    $("body").append(main.render().$el);
     //console.log(new A().f == new A().f);
     // main.postRender();
     // $("#tt").tree();
@@ -757,12 +739,12 @@ var Client;
         Views.SettingsView = SettingsView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-///<reference path="../Events/EventBus.ts" />
+///<reference path="../Events/EventManager.ts" />
 var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        var EventBus = Client.Events.EventBus;
+        var EventMgr = Client.Events.EventManager;
         var TopNav = (function (_super) {
             __extends(TopNav, _super);
             function TopNav() {
@@ -782,7 +764,7 @@ var Client;
             TopNav.prototype.menuItemClick = function (event) {
                 var menuItem = $(event.target).attr("data-menu-item");
                 this.setActiveMenuItem(menuItem);
-                EventBus.raise("ui.views.top-nav.menu-item", "change", menuItem);
+                EventMgr.raise("ui.views.top-nav.menu-item", "change", menuItem);
             };
             TopNav.prototype.setActiveMenuItem = function (item) {
                 if (this.$activeMenuItem)

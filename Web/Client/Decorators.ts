@@ -15,7 +15,7 @@ function property (target: any, property: string) {
           var oldVal = value;
           value = newVal;
           var channel = (<any>target).constructor["eventsChannel"];
-          Client.Events.EventBus.raise(channel, "change", target, oldVal, newVal); 
+          Client.Events.EventManager.raise(channel, "change", target, oldVal, newVal); 
         }
       },
       enumerable: true,

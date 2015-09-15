@@ -1,33 +1,9 @@
-///<reference path="../Events/EventBus.ts" />
+///<reference path="../Events/EventManager.ts" />
 
 module Client.Views {
 
   import Dictionary = Client.Common.Dictionary;
-  import EventBus = Client.Events.EventBus;
-
-  class ViewEventDef {
-    constructor (
-      public event: string, 
-      public selector: string, 
-      public handler: (eventObject: JQueryEventObject, ...args: any[]) => any
-    ){}
-  }
-  
-  class MgrEventDef {
-    constructor(
-      public event: string,
-      public channel: string,
-      public handler: (...args: any[]) => any
-    ){}
-  }
-
-  class EventDef {
-    constructor(
-      public event: string,
-      public target: string,
-      public handler: (...args: any[]) => any
-    ){}
-  }
+  import EventMgr = Client.Events.EventManager;
 
   export class ViewBase {
 
@@ -111,18 +87,18 @@ module Client.Views {
       if (!this._mgrEventDefs)
         this._mgrEventDefs = this.parseEventsObj(this.mgrEvents());
       for (var def of this._mgrEventDefs) {
-        EventBus.on(def.target, def.event, this, def.handler); 
+        EventMgr.on(def.target, def.event, this, def.handler); 
       }
     }
 
     private unbindViewEvents() {
       for (var def of this._viewEventDefs)
-        this._$el.on(def.event, def.target, def.handler);
+        this._$el.off(def.event, def.target, def.handler);
     }
 
     private unbindMgrEvents() {
       for (var def of this._mgrEventDefs)
-        EventBus.off(def.target, def.event, this, def.handler);
+        EventMgr.off(def.target, def.event, this, def.handler);
     }
 
     private parseEventsObj(eventsObj: Object): EventDef[] {
@@ -130,29 +106,38 @@ module Client.Views {
       for (var key in eventsObj) {
         if (!eventsObj.hasOwnProperty(key))
           continue;
-        
+
         var eventDef = (<string>key).trim();
         var idx = eventDef.indexOf(" ");
-        var event, selector, handler;
+        var event, target, handler;
         if (idx >= 0) {
           event = eventDef.substr(0, idx);
-          selector = eventDef.substr(idx + 1);
+          target = eventDef.substr(idx + 1);
         }
         else {
           event = eventDef;
         }
         handler = eventsObj[key];
-        
+
         if (event == "")
           throw new Error(`Event definition '${eventDef}' has empty event.`);
-        if (selector == "")
-          selector = undefined;
+        if (target == "")
+          target = undefined;
         if (typeof handler != "function")
           throw new Error(`Event definition '${eventDef}' has invalid handler.`);
 
-        result.push(new EventDef(event, selector, (...args:any[]) => handler.call(this, ...args)));
+        result.push(new EventDef(event, target, (...args:any[]) => handler.call(this, ...args)));
       }
       return result;
     }
   }
+  
+  class EventDef {
+    constructor(
+      public event: string,
+      public target: string,
+      public handler: (...args: any[]) => any
+    ){}
+  }
+  
 }
