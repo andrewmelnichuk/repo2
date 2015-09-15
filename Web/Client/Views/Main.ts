@@ -35,13 +35,12 @@ module Client.Views {
     
     private setContentView(menuItem: string) {
       if (!this.viewCreators.containsKey(menuItem))
-        throw new Error(`Unknown menu item '${menuItem}'`);
+        throw new Error(`Unknown menu item '${menuItem}'.`);
         
       if (this._vmContent)
         this._vmContent.destroy();
       this._vmContent = this.viewCreators.get(menuItem)(this);
-      this._vmContent.render();
-      this.$el.find(".content").append(this._vmContent.$el);
+      this.$el.find(".content").append(this._vmContent.render().$el);
     }
   }
 }
@@ -51,8 +50,7 @@ import User = Client.Models.User;
 
 window.onload = () => {
   var main = new Client.Views.Main();
-  main.render();
-  $("body").append(main.$el);
+  $("body").append(main.render().$el);
   
   //console.log(new A().f == new A().f);
   
