@@ -23,7 +23,7 @@ module Client.Views {
     private menuItemClick(event: JQueryEventObject) {
       var menuItem = $(event.target).attr("data-menu-item");
       this.setActiveMenuItem(menuItem);
-      EventMgr.raise("ui.views.top-nav.menu-item", "change", menuItem);
+      EventMgr.raise("ui.views.top-nav", "change", menuItem);
     }
 
     private setActiveMenuItem(item: string) {

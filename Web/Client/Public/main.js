@@ -133,6 +133,7 @@ var Client;
                     for (var i = 0; i < handlers.length; i++) {
                         if (handlers[i].scope == scope && handlers[i].callback == callback) {
                             handlers.splice(i, 1);
+                            // TODO remove empty events and channels
                             break;
                         }
                     }
@@ -153,8 +154,12 @@ var Client;
                     console.log("EventManager: invalid event '" + event + "'");
                     return;
                 }
-                handlers.forEach(function (handler) { return (_a = handler.callback).call.apply(_a, [handler.scope].concat(args)); var _a; });
+                for (var _a = 0; _a < handlers.length; _a++) {
+                    var handler = handlers[_a];
+                    (_b = handler.callback).call.apply(_b, [handler.scope].concat(args));
+                }
                 console.log("EventManager: " + channel + " -> " + event + ", " + handlers.length + " handler(s) called");
+                var _b;
             };
             EventManager._handlers = new Dictionary();
             return EventManager;
@@ -655,13 +660,13 @@ var Client;
                 });
             }
             Main.prototype.render = function () {
-                this.$el.html("\n        <div class=\"container\">\n          <div class=\"topnav\"></div>\n          <div class=\"content\"></div>\n        </div>\n      ");
-                this.$el.find(".container .topnav").append(this._vwTopNav.render().$el);
+                this.$el.html("\n        <div class=\"container\">\n          <div class=\"top-nav\"></div>\n          <div class=\"content\"></div>\n        </div>\n      ");
+                this.$el.find(".container .top-nav").append(this._vwTopNav.render().$el);
                 return this;
             };
             Main.prototype.mgrEvents = function () {
                 return {
-                    "change ui.views.top-nav.menu-item": this.setContentView
+                    "change ui.views.top-nav": this.setContentView
                 };
             };
             Main.prototype.setContentView = function (menuItem) {
@@ -742,7 +747,7 @@ var Client;
             TopNav.prototype.menuItemClick = function (event) {
                 var menuItem = $(event.target).attr("data-menu-item");
                 this.setActiveMenuItem(menuItem);
-                EventMgr.raise("ui.views.top-nav.menu-item", "change", menuItem);
+                EventMgr.raise("ui.views.top-nav", "change", menuItem);
             };
             TopNav.prototype.setActiveMenuItem = function (item) {
                 if (this.$activeMenuItem)
@@ -766,16 +771,58 @@ var Client;
                 __extends(ManageView, _super);
                 function ManageView() {
                     _super.apply(this, arguments);
-                    this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\">\n          <ul class=\"nav nav-pills nav-stacked\">\n            <li role=\"presentation\"><a href=\"#\">Applications</a></li>\n            <li role=\"presentation\"><a href=\"#\">Networks</a></li>\n            <li role=\"presentation\"><a href=\"#\">Clusters</a></li>\n            <li role=\"presentation\"><a href=\"#\">Groups</a></li>\n          </ul>\n        </div>\n        <div class=\"col-md-9\">\n          Content\n        </div>\n      </div>\n    ";
+                    this._sideNav = new Manage.NavView(this);
+                    this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3 side-nav\">\n        </div>\n        <div class=\"col-md-9 content\">\n          Content\n        </div>\n      </div>\n    ";
                 }
                 ManageView.prototype.render = function () {
                     _super.prototype.render.call(this);
                     this.$el.html(this.template);
+                    this.$el.find(".side-nav").append(this._sideNav.render().$el);
                     return this;
+                };
+                ManageView.prototype.mgrEvents = function () {
+                    return {
+                        "change ui.views.manage.nav": this.setContentView
+                    };
+                };
+                ManageView.prototype.setContentView = function (menuItem) {
+                    this.$el.find(".content").html(menuItem);
                 };
                 return ManageView;
             })(Client.Views.ViewBase);
             Manage.ManageView = ManageView;
+        })(Manage = Views.Manage || (Views.Manage = {}));
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var Manage;
+        (function (Manage) {
+            var EventMgr = Client.Events.EventManager;
+            var NavView = (function (_super) {
+                __extends(NavView, _super);
+                function NavView() {
+                    _super.apply(this, arguments);
+                    this.template = "\n      <ul class=\"nav nav-pills nav-stacked\">\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"apps\">Applications</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"nets\">Networks</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"servers\">Servers</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"clusters\">Clusters</a></li>\n      </ul>\n    ";
+                }
+                NavView.prototype.render = function () {
+                    this.$el.html(this.template);
+                    return this;
+                };
+                NavView.prototype.viewEvents = function () {
+                    return {
+                        "click a[data-menu-item]": this.menuItemClick
+                    };
+                };
+                NavView.prototype.menuItemClick = function (event) {
+                    var menuItem = $(event.target).attr("data-menu-item");
+                    EventMgr.raise("ui.views.manage.nav", "change", menuItem);
+                };
+                return NavView;
+            })(Client.Views.ViewBase);
+            Manage.NavView = NavView;
         })(Manage = Views.Manage || (Views.Manage = {}));
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));

@@ -19,17 +19,17 @@ module Client.Views {
     public render() {
       this.$el.html(`
         <div class="container">
-          <div class="topnav"></div>
+          <div class="top-nav"></div>
           <div class="content"></div>
         </div>
       `);
-      this.$el.find(".container .topnav").append(this._vwTopNav.render().$el);
+      this.$el.find(".container .top-nav").append(this._vwTopNav.render().$el);
       return this;
     }
 
     protected mgrEvents() {
       return {
-        "change ui.views.top-nav.menu-item": this.setContentView
+        "change ui.views.top-nav": this.setContentView
       };
     }
     
