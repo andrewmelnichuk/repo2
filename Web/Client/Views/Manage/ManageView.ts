@@ -14,8 +14,8 @@ module Client.Views.Manage {
           <ul class="nav nav-pills nav-stacked">
             <li role="presentation"><a href="#">Applications</a></li>
             <li role="presentation"><a href="#">Networks</a></li>
+            <li role="presentation"><a href="#">Servers</a></li>
             <li role="presentation"><a href="#">Clusters</a></li>
-            <li role="presentation"><a href="#">Groups</a></li>
           </ul>
         </div>
         <div class="col-md-9">
