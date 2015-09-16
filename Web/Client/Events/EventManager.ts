@@ -22,6 +22,7 @@ module Client.Events {
         for (var i = 0; i < handlers.length; i++) {
           if (handlers[i].scope == scope && handlers[i].callback == callback) {
             handlers.splice(i, 1);
+            // TODO remove empty events and channels
             break;
           }
         }
@@ -41,7 +42,9 @@ module Client.Events {
         return;
       }
 
-      handlers.forEach(handler => handler.callback.call(handler.scope, ...args));
+      for (var handler of handlers)
+        handler.callback.call(handler.scope, ...args);
+        
       console.log(`EventManager: ${channel} -> ${event}, ${handlers.length} handler(s) called`);
     }
   }
