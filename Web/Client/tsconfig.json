@@ -3,6 +3,7 @@
     "target": "ES5",
     "out": "./Web/Client/Public/main.js",
     "listFiles": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "jsx": "react"
   }
 }

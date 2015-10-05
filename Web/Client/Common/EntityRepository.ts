@@ -1,5 +1,6 @@
 ///<reference path="../Models/User.ts" />
 ///<reference path="../Models/App.ts" />
+///<reference path = "../_references.ts" />
 
 module Client.Common {
   
@@ -63,29 +64,29 @@ module Client.Common {
     public save(entity: T): Promise<number> {
       return new Promise<number>((resolve, reject) => {
         var url = this._url + (entity.id > 0) ? ("/" + entity.id) : "";
-        $.ajax(url + "?rev=" + this._revision, {
-           data: JSON.stringify(entity),
-           contentType: "application/json",
-           dataType: "JSON",
-           method: "POST"})
-         .done(response => {
-           this.updateData(response.Updates);
-           resolve(response.Data);
-         })
-         .fail(reject);
+        // $.ajax(url + "?rev=" + this._revision, {
+        //    data: JSON.stringify(entity),
+        //    contentType: "application/json",
+        //    dataType: "JSON",
+        //    method: "POST"})
+        //  .done(response => {
+        //    this.updateData(response.Updates);
+        //    resolve(response.Data);
+        //  })
+        //  .fail(reject);
       });
     }
  
     public delete(id: number): Promise<void> {
       return new Promise<void>((resolve, reject) => {
-        $.ajax(this._url + "/" + id + "?rev=" + this._revision, { 
-           dataType: "JSON", 
-           method: "DELETE" })
-         .done(response => {
-           this.updateData(response.Updates);
-           resolve(response.Data);
-         })
-         .fail(reject);
+        // $.ajax(this._url + "/" + id + "?rev=" + this._revision, { 
+        //    dataType: "JSON", 
+        //    method: "DELETE" })
+        //  .done(response => {
+        //    this.updateData(response.Updates);
+        //    resolve(response.Data);
+        //  })
+        //  .fail(reject);
       });
     }
     

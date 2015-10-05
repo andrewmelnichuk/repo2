@@ -1,4 +1,4 @@
-///<reference path="../Events/EventManager.ts" />
+///<reference path="../_references.ts" />
 
 module Client.Views {
 

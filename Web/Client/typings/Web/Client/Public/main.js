@@ -167,107 +167,6 @@ var Client;
         Events.EventManager = EventManager;
     })(Events = Client.Events || (Client.Events = {}));
 })(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var Entity = (function () {
-            function Entity() {
-            }
-            return Entity;
-        })();
-        Models.Entity = Entity;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
-///<reference path="Entity.ts"/>
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
-};
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var App = (function (_super) {
-            __extends(App, _super);
-            function App() {
-                _super.apply(this, arguments);
-            }
-            App.fromJson = function (json) {
-                var app = new App();
-                app.id = json.Id;
-                app.revision = json.Revision;
-                app.name = json.Name;
-                app.code = json.Code;
-                app.internalId = json.InternalId;
-                return app;
-            };
-            __decorate([
-                property
-            ], App.prototype, "name");
-            __decorate([
-                property
-            ], App.prototype, "code");
-            __decorate([
-                property
-            ], App.prototype, "internalId");
-            App = __decorate([
-                model("models.App")
-            ], App);
-            return App;
-        })(Models.Entity);
-        Models.App = App;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
-///<reference path="Entity.ts"/>
-var Client;
-(function (Client) {
-    var Models;
-    (function (Models) {
-        var User = (function (_super) {
-            __extends(User, _super);
-            function User() {
-                _super.apply(this, arguments);
-            }
-            User.fromJson = function (json) {
-                var u = new User();
-                u.id = json.Id;
-                u.revision = json.Revision;
-                u.login = json.Login;
-                u.password = json.Password;
-                u.firstName = json.FirstName;
-                u.lastName = json.LastName;
-                return u;
-            };
-            __decorate([
-                property
-            ], User.prototype, "login");
-            __decorate([
-                property
-            ], User.prototype, "password");
-            __decorate([
-                property
-            ], User.prototype, "firstName");
-            __decorate([
-                property
-            ], User.prototype, "lastName");
-            User = __decorate([
-                model("models.User")
-            ], User);
-            return User;
-        })(Models.Entity);
-        Models.User = User;
-    })(Models = Client.Models || (Client.Models = {}));
-})(Client || (Client = {}));
 ///<reference path="../Events/EventManager.ts" />
 var Client;
 (function (Client) {
@@ -409,171 +308,115 @@ var Client;
         })();
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var ExplorerView = (function (_super) {
-            __extends(ExplorerView, _super);
-            function ExplorerView() {
-                _super.apply(this, arguments);
-                this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\" style=\"border: 0px solid red\">\n          <div class=\"panel panel-default\">\n            <div class=\"panel-heading\">\n              <h3 class=\"panel-title\">Games</h3>\n            </div>\n            <div class=\"panel-body\" style=\"padding:10px;\">\n              <div id=\"jstree\">\n                <ul>\n                  <li>Production\n                    <ul>\n                      <li>Total Domination\n                        <ul>\n                          <li>Manage</li>\n                          <li>Configs</li>\n                          <li>Logs</li>\n                          <li>Perfs</li>\n                          <li>Servers</li>\n                        </ul>\n                      </li>\n                      <li>Sparta</li>\n                      <li>Pirates</li>\n                      <li>Elves</li>\n                      <li>Nords</li>\n                    </ul>\n                  </li>\n                  <li>Supertest\n                    <ul>\n                      <li>Total Domination</li>\n                    </ul>\n                  </li>\n                </ul>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"col-md-9\" style=\"border: 1px solid red\">\n          <h1>Title</h1>\n        </div>\n      </div>\n    ";
-            }
-            ExplorerView.prototype.initialize = function () {
-            };
-            ExplorerView.prototype.render = function () {
-                this.$el.html(this.template);
-                this.$el.find("#jstree").jstree();
-                return this;
-            };
-            return ExplorerView;
-        })(Client.Views.ViewBase);
-        Views.ExplorerView = ExplorerView;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-///<reference path="../Events/EventManager.ts" />
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var EventMgr = Client.Events.EventManager;
-        var TopNav = (function (_super) {
-            __extends(TopNav, _super);
-            function TopNav() {
-                _super.apply(this, arguments);
-                this.template = "\n      <nav class=\"navbar navbar-default\">\n        <div class=\"container-fluid\">\n\n          <!-- Brand and toggle get grouped for better mobile display -->\n          <div class=\"navbar-header\">\n            <a class=\"navbar-brand\" href=\"#\">Plarium</a>\n          </div>\n      \n          <!-- Collect the nav links, forms, and other content for toggling -->\n          <ul class=\"nav navbar-nav\">\n            <li><a href=\"#\" data-menu-item=\"explore\">Explore <span class=\"sr-only\">(current)</span></a></li>\n            <li><a href=\"#\" data-menu-item=\"manage\">Manage</a></li>\n          </ul>\n          <ul class=\"nav navbar-nav navbar-right\">\n            <li class=\"dropdown\">\n              <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username <span class=\"caret\"></span></a>\n              <ul class=\"dropdown-menu\">\n                <li><a href=\"#\" data-menu-item=\"settings\">Settings</a></li>\n                <li><a href=\"#\" data-menu-item=\"logout\">Logout</a></li>\n              </ul>\n            </li>\n          </ul>\n        </div>\n      </nav>\n    ";
-            }
-            TopNav.prototype.render = function () {
-                _super.prototype.render.call(this);
-                this.$el.html(this.template);
-                return this;
-            };
-            TopNav.prototype.viewEvents = function () {
-                return {
-                    "click a[data-menu-item]": this.menuItemClick,
-                };
-            };
-            TopNav.prototype.menuItemClick = function (event) {
-                var menuItem = $(event.target).attr("data-menu-item");
-                this.setActiveMenuItem(menuItem);
-                EventMgr.raise("ui.views.top-nav", "change", menuItem);
-            };
-            TopNav.prototype.setActiveMenuItem = function (item) {
-                if (this.$activeMenuItem)
-                    this.$activeMenuItem.parent("li").removeClass("active");
-                this.$activeMenuItem = this.$el.find("a[data-menu-item='" + item + "']");
-                if (this.$activeMenuItem)
-                    this.$activeMenuItem.parent("li").addClass("active");
-            };
-            return TopNav;
-        })(Views.ViewBase);
-        Views.TopNav = TopNav;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var SettingsView = (function (_super) {
-            __extends(SettingsView, _super);
-            function SettingsView() {
-                _super.apply(this, arguments);
-                this.template = "Settings view";
-            }
-            SettingsView.prototype.initialize = function () {
-            };
-            SettingsView.prototype.render = function () {
-                _super.prototype.render.call(this);
-                this.$el.html(this.template);
-                return this;
-            };
-            return SettingsView;
-        })(Client.Views.ViewBase);
-        Views.SettingsView = SettingsView;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var Manage;
-        (function (Manage) {
-            var ManageView = (function (_super) {
-                __extends(ManageView, _super);
-                function ManageView() {
-                    _super.apply(this, arguments);
-                    this._sideNav = new Manage.NavView(this);
-                    this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3 side-nav\">\n        </div>\n        <div class=\"col-md-9 content\">\n          Content\n        </div>\n      </div>\n    ";
-                }
-                ManageView.prototype.render = function () {
-                    _super.prototype.render.call(this);
-                    this.$el.html(this.template);
-                    this.$el.find(".side-nav").append(this._sideNav.render().$el);
-                    return this;
-                };
-                ManageView.prototype.mgrEvents = function () {
-                    return {
-                        "change ui.views.manage.nav": this.setContentView
-                    };
-                };
-                ManageView.prototype.setContentView = function (menuItem) {
-                    this.$el.find(".content").html(menuItem);
-                };
-                return ManageView;
-            })(Client.Views.ViewBase);
-            Manage.ManageView = ManageView;
-        })(Manage = Views.Manage || (Views.Manage = {}));
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var Manage;
-        (function (Manage) {
-            var EventMgr = Client.Events.EventManager;
-            var NavView = (function (_super) {
-                __extends(NavView, _super);
-                function NavView() {
-                    _super.apply(this, arguments);
-                    this.template = "\n      <ul class=\"nav nav-pills nav-stacked\">\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"apps\">Applications</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"nets\">Networks</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"servers\">Servers</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"clusters\">Clusters</a></li>\n      </ul>\n    ";
-                }
-                NavView.prototype.render = function () {
-                    this.$el.html(this.template);
-                    return this;
-                };
-                NavView.prototype.viewEvents = function () {
-                    return {
-                        "click a[data-menu-item]": this.menuItemClick
-                    };
-                };
-                NavView.prototype.menuItemClick = function (event) {
-                    var menuItem = $(event.target).attr("data-menu-item");
-                    EventMgr.raise("ui.views.manage.nav", "change", menuItem);
-                };
-                return NavView;
-            })(Client.Views.ViewBase);
-            Manage.NavView = NavView;
-        })(Manage = Views.Manage || (Views.Manage = {}));
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
 ///<reference path="typings/es6-promise/es6-promise.d.ts"/>
 ///<reference path="typings/jquery/jquery.d.ts"/>
 ///<reference path="typings/react/react.d.ts"/>
-///<reference path="typings/react/react-global.d.ts"/>
-///<reference path="Common/Dictionary.ts"/>
 ///<reference path="Events/EventManager.ts"/>
-///<reference path="Models/App.ts"/>
-///<reference path="Models/Entity.ts"/>
-///<reference path="Models/User.ts"/>
 ///<reference path="Views/ViewBase.ts"/>
-///<reference path="Views/ExplorerView.ts"/>
-///<reference path="Views/TopNav.ts"/>
-///<reference path="Views/SettingsView.ts"/>
-///<reference path="Views/Manage/ManageView.ts"/>
-///<reference path="Views/Manage/NAvView.ts"/>
 ///<reference path="Config.ts"/>
 ///<reference path="Utils.ts"/>
+///<reference path="Common/Dictionary.ts"/> 
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var Entity = (function () {
+            function Entity() {
+            }
+            return Entity;
+        })();
+        Models.Entity = Entity;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="Entity.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
+    switch (arguments.length) {
+        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
+        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
+        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
+    }
+};
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var User = (function (_super) {
+            __extends(User, _super);
+            function User() {
+                _super.apply(this, arguments);
+            }
+            User.fromJson = function (json) {
+                var u = new User();
+                u.id = json.Id;
+                u.revision = json.Revision;
+                u.login = json.Login;
+                u.password = json.Password;
+                u.firstName = json.FirstName;
+                u.lastName = json.LastName;
+                return u;
+            };
+            __decorate([
+                property
+            ], User.prototype, "login");
+            __decorate([
+                property
+            ], User.prototype, "password");
+            __decorate([
+                property
+            ], User.prototype, "firstName");
+            __decorate([
+                property
+            ], User.prototype, "lastName");
+            User = __decorate([
+                model("models.User")
+            ], User);
+            return User;
+        })(Models.Entity);
+        Models.User = User;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
+///<reference path="Entity.ts"/>
+var Client;
+(function (Client) {
+    var Models;
+    (function (Models) {
+        var App = (function (_super) {
+            __extends(App, _super);
+            function App() {
+                _super.apply(this, arguments);
+            }
+            App.fromJson = function (json) {
+                var app = new App();
+                app.id = json.Id;
+                app.revision = json.Revision;
+                app.name = json.Name;
+                app.code = json.Code;
+                app.internalId = json.InternalId;
+                return app;
+            };
+            __decorate([
+                property
+            ], App.prototype, "name");
+            __decorate([
+                property
+            ], App.prototype, "code");
+            __decorate([
+                property
+            ], App.prototype, "internalId");
+            App = __decorate([
+                model("models.App")
+            ], App);
+            return App;
+        })(Models.Entity);
+        Models.App = App;
+    })(Models = Client.Models || (Client.Models = {}));
+})(Client || (Client = {}));
 ///<reference path="../Models/User.ts" />
 ///<reference path="../Models/App.ts" />
 ///<reference path = "../_references.ts" />
@@ -779,33 +622,28 @@ var Client;
         Common.HttpClient = HttpClient;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
-///<reference path="_references.ts" />
-var DemoProps = (function () {
-    function DemoProps() {
-    }
-    return DemoProps;
-})();
-var UserName = (function (_super) {
-    __extends(UserName, _super);
-    function UserName() {
-        _super.apply(this, arguments);
-    }
-    UserName.prototype.render = function () {
-        return (React.createElement("div", null, this.props.name));
-    };
-    return UserName;
-})(React.Component);
-var MyComponent = (function (_super) {
-    __extends(MyComponent, _super);
-    function MyComponent(props) {
-        _super.call(this, props);
-        this.foo = 42;
-    }
-    MyComponent.prototype.render = function () {
-        return (React.createElement("div", null, "Hello world! ", React.createElement(UserName, {"name": "Andrew"})));
-    };
-    return MyComponent;
-})(React.Component);
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ExplorerView = (function (_super) {
+            __extends(ExplorerView, _super);
+            function ExplorerView() {
+                _super.apply(this, arguments);
+                this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\" style=\"border: 0px solid red\">\n          <div class=\"panel panel-default\">\n            <div class=\"panel-heading\">\n              <h3 class=\"panel-title\">Games</h3>\n            </div>\n            <div class=\"panel-body\" style=\"padding:10px;\">\n              <div id=\"jstree\">\n                <ul>\n                  <li>Production\n                    <ul>\n                      <li>Total Domination\n                        <ul>\n                          <li>Manage</li>\n                          <li>Configs</li>\n                          <li>Logs</li>\n                          <li>Perfs</li>\n                          <li>Servers</li>\n                        </ul>\n                      </li>\n                      <li>Sparta</li>\n                      <li>Pirates</li>\n                      <li>Elves</li>\n                      <li>Nords</li>\n                    </ul>\n                  </li>\n                  <li>Supertest\n                    <ul>\n                      <li>Total Domination</li>\n                    </ul>\n                  </li>\n                </ul>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"col-md-9\" style=\"border: 1px solid red\">\n          <h1>Title</h1>\n        </div>\n      </div>\n    ";
+            }
+            ExplorerView.prototype.initialize = function () {
+            };
+            ExplorerView.prototype.render = function () {
+                this.$el.html(this.template);
+                this.$el.find("#jstree").jstree();
+                return this;
+            };
+            return ExplorerView;
+        })(Client.Views.ViewBase);
+        Views.ExplorerView = ExplorerView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="../_references.ts" />
 var Client;
 (function (Client) {
@@ -846,11 +684,11 @@ var Client;
         Views.Main = Main;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
+var Data = Client.Common.Data;
 var User = Client.Models.User;
 window.onload = function () {
     var main = new Client.Views.Main();
     $("body").append(main.render().$el);
-    //React.render(<MyComponent name="Andrew" />, document.body);
     //console.log(new A().f == new A().f);
     // main.postRender();
     // $("#tt").tree();
@@ -864,3 +702,147 @@ window.onload = function () {
     //   console.log(Data.users.all().length);
     // });
 };
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var SettingsView = (function (_super) {
+            __extends(SettingsView, _super);
+            function SettingsView() {
+                _super.apply(this, arguments);
+                this.template = "Settings view";
+            }
+            SettingsView.prototype.initialize = function () {
+            };
+            SettingsView.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(this.template);
+                return this;
+            };
+            return SettingsView;
+        })(Client.Views.ViewBase);
+        Views.SettingsView = SettingsView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../Events/EventManager.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var EventMgr = Client.Events.EventManager;
+        var TopNav = (function (_super) {
+            __extends(TopNav, _super);
+            function TopNav() {
+                _super.apply(this, arguments);
+                this.template = "\n      <nav class=\"navbar navbar-default\">\n        <div class=\"container-fluid\">\n\n          <!-- Brand and toggle get grouped for better mobile display -->\n          <div class=\"navbar-header\">\n            <a class=\"navbar-brand\" href=\"#\">Plarium</a>\n          </div>\n      \n          <!-- Collect the nav links, forms, and other content for toggling -->\n          <ul class=\"nav navbar-nav\">\n            <li><a href=\"#\" data-menu-item=\"explore\">Explore <span class=\"sr-only\">(current)</span></a></li>\n            <li><a href=\"#\" data-menu-item=\"manage\">Manage</a></li>\n          </ul>\n          <ul class=\"nav navbar-nav navbar-right\">\n            <li class=\"dropdown\">\n              <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username <span class=\"caret\"></span></a>\n              <ul class=\"dropdown-menu\">\n                <li><a href=\"#\" data-menu-item=\"settings\">Settings</a></li>\n                <li><a href=\"#\" data-menu-item=\"logout\">Logout</a></li>\n              </ul>\n            </li>\n          </ul>\n        </div>\n      </nav>\n    ";
+            }
+            TopNav.prototype.render = function () {
+                _super.prototype.render.call(this);
+                this.$el.html(this.template);
+                return this;
+            };
+            TopNav.prototype.viewEvents = function () {
+                return {
+                    "click a[data-menu-item]": this.menuItemClick,
+                };
+            };
+            TopNav.prototype.menuItemClick = function (event) {
+                var menuItem = $(event.target).attr("data-menu-item");
+                this.setActiveMenuItem(menuItem);
+                EventMgr.raise("ui.views.top-nav", "change", menuItem);
+            };
+            TopNav.prototype.setActiveMenuItem = function (item) {
+                if (this.$activeMenuItem)
+                    this.$activeMenuItem.parent("li").removeClass("active");
+                this.$activeMenuItem = this.$el.find("a[data-menu-item='" + item + "']");
+                if (this.$activeMenuItem)
+                    this.$activeMenuItem.parent("li").addClass("active");
+            };
+            return TopNav;
+        })(Views.ViewBase);
+        Views.TopNav = TopNav;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var Manage;
+        (function (Manage) {
+            var ManageView = (function (_super) {
+                __extends(ManageView, _super);
+                function ManageView() {
+                    _super.apply(this, arguments);
+                    this._sideNav = new Manage.NavView(this);
+                    this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3 side-nav\">\n        </div>\n        <div class=\"col-md-9 content\">\n          Content\n        </div>\n      </div>\n    ";
+                }
+                ManageView.prototype.render = function () {
+                    _super.prototype.render.call(this);
+                    this.$el.html(this.template);
+                    this.$el.find(".side-nav").append(this._sideNav.render().$el);
+                    return this;
+                };
+                ManageView.prototype.mgrEvents = function () {
+                    return {
+                        "change ui.views.manage.nav": this.setContentView
+                    };
+                };
+                ManageView.prototype.setContentView = function (menuItem) {
+                    this.$el.find(".content").html(menuItem);
+                };
+                return ManageView;
+            })(Client.Views.ViewBase);
+            Manage.ManageView = ManageView;
+        })(Manage = Views.Manage || (Views.Manage = {}));
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var Manage;
+        (function (Manage) {
+            var EventMgr = Client.Events.EventManager;
+            var NavView = (function (_super) {
+                __extends(NavView, _super);
+                function NavView() {
+                    _super.apply(this, arguments);
+                    this.template = "\n      <ul class=\"nav nav-pills nav-stacked\">\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"apps\">Applications</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"nets\">Networks</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"servers\">Servers</a></li>\n        <li role=\"presentation\"><a href=\"#\" data-menu-item=\"clusters\">Clusters</a></li>\n      </ul>\n    ";
+                }
+                NavView.prototype.render = function () {
+                    this.$el.html(this.template);
+                    return this;
+                };
+                NavView.prototype.viewEvents = function () {
+                    return {
+                        "click a[data-menu-item]": this.menuItemClick
+                    };
+                };
+                NavView.prototype.menuItemClick = function (event) {
+                    var menuItem = $(event.target).attr("data-menu-item");
+                    EventMgr.raise("ui.views.manage.nav", "change", menuItem);
+                };
+                return NavView;
+            })(Client.Views.ViewBase);
+            Manage.NavView = NavView;
+        })(Manage = Views.Manage || (Views.Manage = {}));
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="_references.ts" />
+var React = __React;
+var DemoProps = (function () {
+    function DemoProps() {
+    }
+    return DemoProps;
+})();
+var Demo = (function (_super) {
+    __extends(Demo, _super);
+    function Demo(props) {
+        _super.call(this, props);
+        this.foo = 42;
+    }
+    Demo.prototype.render = function () {
+        return (React.createElement("div", null, "Hello world! ", this.props.name));
+    };
+    return Demo;
+})(React.Component);

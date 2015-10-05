@@ -1,4 +1,4 @@
-///<reference path="../Common/Dictionary.ts"/>
+///<reference path="../_references.ts" />
 
 module Client.Views {
 
@@ -45,12 +45,16 @@ module Client.Views {
   }
 }
 
-import Data = Client.Common.Data;
 import User = Client.Models.User;
 
 window.onload = () => {
   var main = new Client.Views.Main();
   $("body").append(main.render().$el);
+  
+  
+  
+  //React.render(<MyComponent name="Andrew" />, document.body);
+  
   
   //console.log(new A().f == new A().f);
   

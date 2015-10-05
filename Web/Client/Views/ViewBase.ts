@@ -139,5 +139,4 @@ module Client.Views {
       public handler: (...args: any[]) => any
     ){}
   }
-  
 }
