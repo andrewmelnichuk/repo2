@@ -43,17 +43,63 @@ module Client.Views {
       this.$el.find(".content").append(this._vmContent.render().$el);
     }
   }
+
+  export class Main1 extends React.Component<any, any> {
+
+    // private _vmContent: ViewBase;
+
+    // private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>({
+    //   "explore": parent => new ExplorerView(parent),
+    //   "manage": parent => new Client.Views.Manage.ManageView(parent),
+    //   "settings": parent => new SettingsView(parent)
+    // });
+
+    private topNavChanged(item: MenuItem) {
+      console.log(item);
+    }
+
+    public render() {
+      return (
+        <div className="container">
+          <div className="top-nav">
+            <TopNav1 activeItem={MenuItem.Manage} onChanged={this.topNavChanged} />
+          </div>
+          <div className="content"></div>
+        </div>
+      );
+    }
+
+    // protected mgrEvents() {
+    //   return {
+    //     "change ui.views.top-nav": this.setContentView
+    //   };
+    // }
+    
+    // private setContentView(menuItem: string) {
+    //   if (!this.viewCreators.containsKey(menuItem))
+    //     throw new Error(`Unknown menu item '${menuItem}'.`);
+        
+    //   if (this._vmContent)
+    //     this._vmContent.destroy();
+    //   this._vmContent = this.viewCreators.get(menuItem)(this);
+    //   this.$el.find(".content").append(this._vmContent.render().$el);
+    // }
+  }
 }
 
 import User = Client.Models.User;
+import TopNav = Client.Views.TopNav1;
+import ExplorerView = Client.Views.ExplorerView1;
 
 window.onload = () => {
-  var main = new Client.Views.Main();
-  $("body").append(main.render().$el);
+  // var main = new Client.Views.Main();
+  // $("body").append(main.render().$el);
   
   
+  var view = <Client.Views.Main1 />;
+  React.render(view, document.body);
   
-  //React.render(<MyComponent name="Andrew" />, document.body);
+  // React.unmountComponentAtNode(document.body);
   
   
   //console.log(new A().f == new A().f);

@@ -12,6 +12,7 @@
 ///<reference path="Views/ViewBase.ts"/>
 ///<reference path="Views/ExplorerView.ts"/>
 ///<reference path="Views/TopNav.ts"/>
+///<reference path="Views/TopNav.tsx"/>
 ///<reference path="Views/SettingsView.ts"/>
 ///<reference path="Views/Manage/ManageView.ts"/>
 ///<reference path="Views/Manage/NAvView.ts"/>

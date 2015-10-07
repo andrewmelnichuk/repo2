@@ -10,15 +10,54 @@ class UserName extends React.Component<{name: string}, any> {
   }
 }
 
-class MyComponent extends React.Component<DemoProps, any> {
-  private foo:number;
-  constructor(props:DemoProps) {
-    super(props);
-    this.foo = 42;
+class LikeButtonState {
+  liked: {
+    value: boolean
+  };
+}
+
+class LikeButton extends React.Component<any, LikeButtonState> {
+  
+  private _state:LikeButtonState = { liked: {value: false}};
+  
+  constructor() {
+    super();
+    this.state = { liked: {value: false}};
+    console.log("ctor");
   }
+  
+  componentWillMount() {
+    console.log("componentWillMount");
+  }
+  
+  componentDidMount() {
+    console.log("componentDidMount");
+  }
+  
+  componentWillUpdate() {
+    console.log("componentWillUpdate");
+  }
+  
+  componentDidUpdate() {
+    console.log("componentDidUpdate");
+  }
+  
+  componentWillUnmount() {
+    console.log("componentWillUnmount");
+  }
+  
+  buttonClick() {
+    // this.state.liked.value = !this.state.liked.value;
+    // this.forceUpdate();
+    this.state.liked.value = !this.state.liked.value;  
+    this.setState(this.state);
+  }
+  
   render() {
+    console.log("render");
+    var txt = this.state.liked.value ? "Liked" : "Not Liked";
     return (
-      <div>Hello world! <UserName name="Andrew"/></div>
+      <button ref="btn" onClick={this.buttonClick.bind(this)}>{txt}</button>
     );
   }
 }
