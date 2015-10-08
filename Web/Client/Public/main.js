@@ -488,6 +488,7 @@ var Client;
             }
             return TopNavProps;
         })();
+        Views.TopNavProps = TopNavProps;
         var TopNav1 = (function (_super) {
             __extends(TopNav1, _super);
             function TopNav1(props) {
@@ -961,7 +962,7 @@ var Client;
                 console.log(item);
             };
             Main1.prototype.render = function () {
-                return (React.createElement("div", {"className": "container"}, React.createElement("div", {"className": "top-nav"}, React.createElement(Views.TopNav1, {"activeItem": Views.MenuItem.Manage, "onChanged": this.topNavChanged})), React.createElement("div", {"className": "content"})));
+                return (React.createElement("div", {"className": "container"}, React.createElement("div", {"className": "top-nav"}, React.createElement(Views.TopNav1, {"activeItem": Views.MenuItem.Explore, "onChanged": this.topNavChanged})), React.createElement("div", {"className": "content"})));
             };
             return Main1;
         })(React.Component);

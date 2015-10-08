@@ -62,7 +62,7 @@ module Client.Views {
       return (
         <div className="container">
           <div className="top-nav">
-            <TopNav1 activeItem={MenuItem.Manage} onChanged={this.topNavChanged} />
+            <TopNav1 activeItem={MenuItem.Explore} onChanged={this.topNavChanged} />
           </div>
           <div className="content"></div>
         </div>

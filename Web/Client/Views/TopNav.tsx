@@ -9,7 +9,7 @@ namespace Client.Views {
     UserLogout
   };
 
-  class TopNavProps {
+  export class TopNavProps {
     activeItem: MenuItem;
     onChanged: (item:MenuItem) => void;
   }
