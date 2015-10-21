@@ -24,32 +24,19 @@ namespace Client.Views {
 
     public render() {
       return (
-        <div ref="jstree">
-          <ul>
-            <li>Production
-              <ul>
-                <li>Total Domination
-                  <ul>
-                    <li>Manage</li>
-                    <li>Configs</li>
-                    <li>Logs</li>
-                    <li>Perfs</li>
-                    <li>Servers</li>
-                  </ul>
-                </li>
-                <li>Sparta</li>
-                <li>Pirates</li>
-                <li>Elves</li>
-                <li>Nords</li>
-              </ul>
-            </li>
-            <li>Supertest
-              <ul>
-                <li>Total Domination</li>
-              </ul>
-            </li>
-          </ul>
-        </div>
+            <div className="row">
+              <div className="col-xs-2">
+                <ul>
+                  <li>Inbox</li>
+                  <li>Starred</li>
+                  <li>Important</li>
+                  <li>Sent Mail</li>
+                </ul>
+              </div>
+              <div className="col-xs-10">
+                content   
+              </div>
+            </div>
       );
     }
   }

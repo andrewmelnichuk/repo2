@@ -436,7 +436,7 @@ var Client;
                 $(node).jstree("destroy");
             };
             ExploreView.prototype.render = function () {
-                return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
+                return (React.createElement("div", {"className": "row"}, React.createElement("div", {"className": "col-xs-2"}, React.createElement("ul", null, React.createElement("li", null, "Inbox"), React.createElement("li", null, "Starred"), React.createElement("li", null, "Important"), React.createElement("li", null, "Sent Mail"))), React.createElement("div", {"className": "col-xs-10"}, "content")));
             };
             return ExploreView;
         })(React.Component);
@@ -896,12 +896,12 @@ var Client;
                     .add("manage", React.createElement(Views.ManageView, null));
                 this.state = { activeItem: "explore" };
             }
-            Index.prototype.onMainMenuClick = function (item) {
+            Index.prototype.onClick = function (item) {
                 if (this.contentViews.containsKey(item))
                     this.setState({ activeItem: item });
             };
             Index.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement(Views.ScreenSaver, null), React.createElement(Views.ModalBox, null), React.createElement(Views.Header, null), React.createElement("div", {"id": "main", "className": "container-fluid"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "sidebar-left", "className": "col-xs-2 col-sm-2"}, React.createElement(Views.MainMenu, {"onClick": this.onMainMenuClick.bind(this)})), React.createElement("div", {"id": "content", "className": "col-xs-12 col-sm-10"}, this.contentViews.get(this.state.activeItem))))));
+                return (React.createElement("div", null, React.createElement(Views.ScreenSaver, null), React.createElement(Views.ModalBox, null), React.createElement(Views.Header, null), React.createElement("div", {"id": "main", "className": "container-fluid"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "sidebar-left", "className": "col-xs-2 col-sm-2"}, React.createElement(Views.MainMenu, {"onClick": this.onClick.bind(this)})), React.createElement("div", {"id": "content", "className": "col-xs-12 col-sm-10"}, this.contentViews.get(this.state.activeItem))))));
             };
             return Index;
         })(React.Component);
@@ -934,7 +934,7 @@ var Client;
             function MainMenu(props) {
                 _super.call(this, props);
                 this._nodes = [
-                    { name: "Explore", id: "explore" },
+                    { name: "Explore", id: "explore", icon: "fa-search", active: true },
                     { name: "Manage", id: "manage", children: [
                             { name: "Applications", id: "manage.apps" },
                             { name: "Networks", id: "manage.nets" },
@@ -946,7 +946,7 @@ var Client;
                                     { name: "Servers", id: "manage.servers4" },
                                 ] },
                         ] },
-                    { name: "Users", id: "users", active: true },
+                    { name: "Users", id: "users" },
                 ];
                 this.state = this.getState();
             }
@@ -963,10 +963,13 @@ var Client;
                     "active-parent": node.active || node.expanded,
                     "active": node.active || node.expanded
                 });
+                var iconClasses = window.classNames("fa", node.icon, {
+                    "fa-angle-right": !node.icon
+                });
                 var children = hasChildren
                     ? React.createElement("ul", {"className": "dropdown-menu", "style": node.expanded ? { display: "block" } : null}, node.children.map(function (n) { return _this.renderNode(n); }))
                     : null;
-                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "className": aClasses, "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": "fa fa-list"}), React.createElement("span", {"className": "hidden-xs"}, node.name)), children));
+                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "className": aClasses, "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": iconClasses}), React.createElement("span", {"className": "hidden-xs"}, node.name)), children));
             };
             MainMenu.prototype.onClick = function (id) {
                 this.traverseNodes(function (node, path) {

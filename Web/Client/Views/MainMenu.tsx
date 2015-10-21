@@ -1,10 +1,11 @@
 ///<reference path="../_references.ts" />
 
-module Client.Views {
+namespace Client.Views {
 
   interface Node {
     name: string,
     id: string,
+    icon?: string,
     active?: boolean,
     expanded?: boolean,
     className?: string,
@@ -18,7 +19,7 @@ module Client.Views {
   export class MainMenu extends React.Component<MainMenuProps, {model:any}> {
 
     private _nodes: Node[] = [
-      {name: "Explore", id: "explore"},
+      {name: "Explore", id: "explore", icon: "fa-search", active: true},
       {name: "Manage", id: "manage", children: [
         {name: "Applications", id: "manage.apps"},
         {name: "Networks", id: "manage.nets"},
@@ -30,7 +31,7 @@ module Client.Views {
           {name: "Servers", id: "manage.servers4"},
         ]},
       ]},
-      {name: "Users", id: "users", active: true},
+      {name: "Users", id: "users"},
     ];
 
     public constructor(props: MainMenuProps) {
@@ -55,6 +56,9 @@ module Client.Views {
           "active-parent": node.active || node.expanded,
           "active": node.active || node.expanded
       });
+      var iconClasses = window.classNames("fa", node.icon, {
+        "fa-angle-right": !node.icon
+      });
 
       var children = hasChildren 
         ? <ul className="dropdown-menu" style={node.expanded ? {display:"block"} : null}>
@@ -65,7 +69,7 @@ module Client.Views {
       return (
         <li key={node.id} className={liClasses}>
           <a href="#" className={aClasses} onClick={this.onClick.bind(this, node.id)}>
-            <i className="fa fa-list"></i>
+            <i className={iconClasses}></i>
             <span className="hidden-xs">{node.name}</span>
           </a>
           {children}
