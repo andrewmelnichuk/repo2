@@ -88,7 +88,7 @@ module Client.Views {
                           <li>
                             <a href="#">
                               <i className="fa fa-power-off"></i>
-                              <span>Logout</span>
+                              <span>Logout 1</span>
                             </a>
                           </li>
                         </ul>
