@@ -7,10 +7,14 @@ module Client.Views {
     public render() {
       return (
         <div>
+          {/*
           <div className="preloader">
             <img src="img/devoops_getdata.gif" className="devoops-getdata" alt="preloader"/>
           </div>
-          <div id="ajax-content"></div>
+          */}
+          <div id="ajax-content">
+            This is Manage view
+          </div>
         </div>  
       );
     }

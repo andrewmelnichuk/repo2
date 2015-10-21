@@ -2,131 +2,120 @@
 
 module Client.Views {
 
-  export enum MainMenuItem {
-    Explore, 
-    Manage
-  };
-
-  export class MainMenuProps {
-    activeItem: MainMenuItem;
-    onChanged: (item: MainMenuItem) => void;
-  };
-  
-  class MenuItemProps {
-    active: boolean;
-    onClick: (item: MainMenuItem) => void;
-  };
-
-  interface MenuProps {
-    className?: string;
+  interface Node {
+    name: string,
+    id: string,
+    active?: boolean,
+    expanded?: boolean,
+    className?: string,
+    children?: Node[],
   }
-  
-  class Menu extends React.Component<MenuProps, any> {
-    
-    public constructor(props: MenuProps) {
+
+  interface MainMenuProps {
+    onClick: (nodeId: string) => void;
+  }
+
+  export class MainMenu extends React.Component<MainMenuProps, {model:any}> {
+
+    private _nodes: Node[] = [
+      {name: "Explore", id: "explore"},
+      {name: "Manage", id: "manage", children: [
+        {name: "Applications", id: "manage.apps"},
+        {name: "Networks", id: "manage.nets"},
+        {name: "Clusters", id: "manage.cluster"},
+        {name: "Servers", id: "manage.servers", children: [
+          {name: "Applications", id: "manage.apps1"},
+          {name: "Networks", id: "manage.nets2"},
+          {name: "Clusters", id: "manage.cluster3"},
+          {name: "Servers", id: "manage.servers4"},
+        ]},
+      ]},
+      {name: "Users", id: "users", active: true},
+    ];
+
+    public constructor(props: MainMenuProps) {
       super(props);
+      this.state = this.getState();
     }
-    
+
     public render() {
       return (
-        <ul className={this.props.className}>
-          {this.props["children"]}
+        <ul className="nav main-menu">
+          {this._nodes.map(node => this.renderNode(node))}
         </ul>
       );
     }
-  }
 
-  interface MenuItemProps2 {
-    id: string;
-    caption: string;
-    icon?:string;
-    expanded?: boolean;
-    active?: boolean;
-    onClick?: () => void;
-  }
+    private renderNode(node: Node) {
+      var hasChildren = (node.children && node.children.length > 0);
 
-  class MenuItem extends React.Component<MenuItemProps2, any> {
-    
-    public constructor(props: MenuItemProps2) {
-      super(props);
-    }
-
-    public render() {
-      var icon = this.props.icon 
-        ? <i className={this.props.icon}></i> 
-        : null;
-
-      var children = this.props["children"]
-        ? <ul className="dropdown-menu" style={this.props.expanded ? {display:"block"} : null}>
-            {this.props["children"]}
-          </ul>
-        : null;
-
-      var aClasses = window.classNames(
-        "ajax-link", {
-        "active-parent active": this.props.active || this.props.expanded
+      var liClasses = hasChildren ? "dropdown" : null;
+      var aClasses = window.classNames("ajax-link", {
+          "dropdown-toggle": hasChildren,
+          "active-parent": node.active || node.expanded,
+          "active": node.active || node.expanded
       });
-      
-      var liClasses = window.classNames(
-        {"dropdown": this.props["children"]}
-      );
+
+      var children = hasChildren 
+        ? <ul className="dropdown-menu" style={node.expanded ? {display:"block"} : null}>
+            {node.children.map(n => this.renderNode(n))}
+          </ul> 
+        : null; 
 
       return (
-        <li className={liClasses}>
-          <a className={aClasses} onClick={() => this.onClick()}>
-            {icon}
-            <span className="hidden-xs">{this.props.caption}</span>
+        <li key={node.id} className={liClasses}>
+          <a href="#" className={aClasses} onClick={this.onClick.bind(this, node.id)}>
+            <i className="fa fa-list"></i>
+            <span className="hidden-xs">{node.name}</span>
           </a>
           {children}
         </li>
       );
     }
-    
-    private onClick() {
+
+    private onClick(id: string) {
+      this.traverseNodes((node, path) => {
+        if (node.id == id) {
+          node.active = true;
+          node.expanded = (node.children && node.children.length > 0) 
+            ? !(node.expanded || false)
+            : false;
+          path.forEach(n => n.expanded = true); // expand all parent nodes
+        }
+        else {
+          node.active = false;
+          node.expanded = false;
+        }
+      });
+
+      this.setState(this.getState());
+
       if (this.props.onClick)
-        this.props.onClick();
+        this.props.onClick(id);
+    }
+
+    private traverseNodes(fn: (node: Node, path: Node[]) => void)
+    {
+      var iterate = (nodes: Node[], path: Node[]) => {
+        if (!nodes) return;
+        nodes.forEach(n => {
+          fn(n, path);
+          path.push(n);
+          iterate(n.children, path);
+          path.splice(path.length - 1, 1);
+        })
+      };
+      iterate(this._nodes, []);
+    }
+    
+    private getState() {
+      return {model: $.extend(true, {}, this._nodes)}; // clone model
     }
   }
-  
-  export class MainMenu extends React.Component<MainMenuProps, {active: MainMenuItem}> {
+}
 
-    private _model = {
-      "explore": {caption: "Explore"},
-      "manage": {caption: "Manage", children: [{
-        "manage.apps": {caption: "Applications"}
-      }]},
-      "users": {caption: "Users"}
-    };
-
-    public constructor(props: MainMenuProps) {
-      super(props);
-      this.state = {active: MainMenuItem.Explore}
-    }
-
-    private setActive(item: MainMenuItem) {
-      this.setState({active: item});
-      if (this.props.onChanged)
-        this.props.onChanged(item);
-    }
-
-    private onClick() {
-      console.log("clicked");
-    }
-
-    public render() {
-      var activeIf = (item: MainMenuItem) => this.state.active == item ? "active" : null;
-
-      return (
-        <Menu className="nav main-menu">
-          <MenuItem caption="Explore" icon="fa fa-pencil-square-o" id="explore" />
-          <MenuItem caption="Manage" icon="fa fa-pencil-square-o" id="manage" >
-            <MenuItem caption="Applications" id="manage.apps"/>
-            <MenuItem caption="Networks" id="manage.nets" />
-            <MenuItem caption="Clusters" id="manage.clusters" />
-            <MenuItem caption="Servers" id="manage.servers" />
-          </MenuItem>
-          <MenuItem caption="Users" icon="fa fa-pencil-square-o" id="explore" />
-          {/*
+        {/*
+        <ul className="nav main-menu">
           <li className="dropdown">
             <a href="#" className="dropdown-toggle">
               <i className="fa fa-table"></i>
@@ -274,9 +263,5 @@ module Client.Views {
               </li>
             </ul>
           </li>
-          */}
-        </Menu>
-      );
-    }
-  }
-}
+        </ul>
+       */}

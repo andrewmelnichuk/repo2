@@ -414,33 +414,33 @@ var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        var ExplorerView = (function (_super) {
-            __extends(ExplorerView, _super);
-            function ExplorerView() {
+        var ExploreView = (function (_super) {
+            __extends(ExploreView, _super);
+            function ExploreView() {
                 _super.apply(this, arguments);
             }
-            ExplorerView.prototype.componentDidMount = function () {
+            ExploreView.prototype.componentDidMount = function () {
                 var node = React.findDOMNode(this.refs["jstree"]);
                 $(node).jstree();
                 console.log("tree did mount");
             };
-            ExplorerView.prototype.componentDidUpdate = function () {
+            ExploreView.prototype.componentDidUpdate = function () {
                 console.log("componentDidUpdate");
             };
-            ExplorerView.prototype.shouldComponentUpdate = function () {
+            ExploreView.prototype.shouldComponentUpdate = function () {
                 console.log("componentShouldUpdate");
                 return false;
             };
-            ExplorerView.prototype.componentWilUnmount = function () {
+            ExploreView.prototype.componentWilUnmount = function () {
                 var node = React.findDOMNode(this.refs["jstree"]);
                 $(node).jstree("destroy");
             };
-            ExplorerView.prototype.render = function () {
+            ExploreView.prototype.render = function () {
                 return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
             };
-            return ExplorerView;
+            return ExploreView;
         })(React.Component);
-        Views.ExplorerView = ExplorerView;
+        Views.ExploreView = ExploreView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 var Client;
@@ -541,7 +541,7 @@ var Client;
 ///<reference path="Models/Entity.ts"/>
 ///<reference path="Models/User.ts"/>
 ///<reference path="Views/ViewBase.ts"/>
-///<reference path="Views/ExplorerView.tsx"/>
+///<reference path="Views/ExploreView.tsx"/>
 ///<reference path="Views/SettingsView.ts"/>
 ///<reference path="Views/Manage/ManageView.ts"/>
 ///<reference path="Views/Manage/NAvView.ts"/>
@@ -752,6 +752,28 @@ var Client;
         Common.HttpClient = HttpClient;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ExplorerView = (function (_super) {
+            __extends(ExplorerView, _super);
+            function ExplorerView() {
+                _super.apply(this, arguments);
+                this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\" style=\"border: 0px solid red\">\n          <div class=\"panel panel-default\">\n            <div class=\"panel-heading\">\n              <h3 class=\"panel-title\">Games</h3>\n            </div>\n            <div class=\"panel-body\" style=\"padding:10px;\">\n              <div id=\"jstree\">\n                <ul>\n                  <li>Production\n                    <ul>\n                      <li>Total Domination\n                        <ul>\n                          <li>Manage</li>\n                          <li>Configs</li>\n                          <li>Logs</li>\n                          <li>Perfs</li>\n                          <li>Servers</li>\n                        </ul>\n                      </li>\n                      <li>Sparta</li>\n                      <li>Pirates</li>\n                      <li>Elves</li>\n                      <li>Nords</li>\n                    </ul>\n                  </li>\n                  <li>Supertest\n                    <ul>\n                      <li>Total Domination</li>\n                    </ul>\n                  </li>\n                </ul>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"col-md-9\" style=\"border: 1px solid red\">\n          <h1>Title</h1>\n        </div>\n      </div>\n    ";
+            }
+            ExplorerView.prototype.initialize = function () {
+            };
+            ExplorerView.prototype.render = function () {
+                this.$el.html(this.template);
+                this.$el.find("#jstree").jstree();
+                return this;
+            };
+            return ExplorerView;
+        })(Client.Views.ViewBase);
+        Views.ExplorerView = ExplorerView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="_references.ts" />
 var DemoProps = (function () {
     function DemoProps() {
@@ -809,6 +831,38 @@ var LikeButton = (function (_super) {
     };
     return LikeButton;
 })(React.Component);
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ExplorerView1 = (function (_super) {
+            __extends(ExplorerView1, _super);
+            function ExplorerView1() {
+                _super.apply(this, arguments);
+            }
+            ExplorerView1.prototype.componentDidMount = function () {
+                var node = React.findDOMNode(this.refs["jstree"]);
+                $(node).jstree();
+            };
+            ExplorerView1.prototype.componentDidUpdate = function () {
+                console.log("componentDidUpdate");
+            };
+            ExplorerView1.prototype.shouldComponentUpdate = function () {
+                console.log("componentShouldUpdate");
+                return false;
+            };
+            ExplorerView1.prototype.componentWilUnmount = function () {
+                var node = React.findDOMNode(this.refs["jstree"]);
+                $(node).jstree("destroy");
+            };
+            ExplorerView1.prototype.render = function () {
+                return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
+            };
+            return ExplorerView1;
+        })(React.Component);
+        Views.ExplorerView1 = ExplorerView1;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
 ///<reference path="../_references.ts" />
 var Client;
 (function (Client) {
@@ -837,17 +891,17 @@ var Client;
             __extends(Index, _super);
             function Index() {
                 _super.call(this);
-                this.activeItem = Views.MainMenuItem.Explore;
                 this.contentViews = new Dictionary()
-                    .add(Views.MainMenuItem.Explore, React.createElement(Views.ExplorerView, null))
-                    .add(Views.MainMenuItem.Manage, React.createElement(Views.ManageView, null));
-                this.state = { activeItem: this.activeItem };
+                    .add("explore", React.createElement(Views.ExploreView, null))
+                    .add("manage", React.createElement(Views.ManageView, null));
+                this.state = { activeItem: "explore" };
             }
-            Index.prototype.mainMenuChanged = function (item) {
-                this.setState({ activeItem: item });
+            Index.prototype.onMainMenuClick = function (item) {
+                if (this.contentViews.containsKey(item))
+                    this.setState({ activeItem: item });
             };
             Index.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement(Views.ScreenSaver, null), React.createElement(Views.ModalBox, null), React.createElement(Views.Header, null), React.createElement("div", {"id": "main", "className": "container-fluid"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "sidebar-left", "className": "col-xs-2 col-sm-2"}, React.createElement(Views.MainMenu, {"activeItem": Views.MainMenuItem.Explore, "onChanged": this.mainMenuChanged.bind(this)})), React.createElement("div", {"id": "content", "className": "col-xs-12 col-sm-10"}, this.contentViews.get(this.state.activeItem))))));
+                return (React.createElement("div", null, React.createElement(Views.ScreenSaver, null), React.createElement(Views.ModalBox, null), React.createElement(Views.Header, null), React.createElement("div", {"id": "main", "className": "container-fluid"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "sidebar-left", "className": "col-xs-2 col-sm-2"}, React.createElement(Views.MainMenu, {"onClick": this.onMainMenuClick.bind(this)})), React.createElement("div", {"id": "content", "className": "col-xs-12 col-sm-10"}, this.contentViews.get(this.state.activeItem))))));
             };
             return Index;
         })(React.Component);
@@ -875,85 +929,86 @@ var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        (function (MainMenuItem) {
-            MainMenuItem[MainMenuItem["Explore"] = 0] = "Explore";
-            MainMenuItem[MainMenuItem["Manage"] = 1] = "Manage";
-        })(Views.MainMenuItem || (Views.MainMenuItem = {}));
-        var MainMenuItem = Views.MainMenuItem;
-        ;
-        var MainMenuProps = (function () {
-            function MainMenuProps() {
-            }
-            return MainMenuProps;
-        })();
-        Views.MainMenuProps = MainMenuProps;
-        ;
-        var MenuItemProps = (function () {
-            function MenuItemProps() {
-            }
-            return MenuItemProps;
-        })();
-        ;
-        var Menu = (function (_super) {
-            __extends(Menu, _super);
-            function Menu(props) {
-                _super.call(this, props);
-            }
-            Menu.prototype.render = function () {
-                return (React.createElement("ul", {"className": this.props.className}, this.props["children"]));
-            };
-            return Menu;
-        })(React.Component);
-        var MenuItem = (function (_super) {
-            __extends(MenuItem, _super);
-            function MenuItem(props) {
-                _super.call(this, props);
-                this.state = { active: props.active };
-            }
-            MenuItem.prototype.render = function () {
-                var _this = this;
-                var icon = this.props.icon
-                    ? React.createElement("i", {"className": this.props.icon})
-                    : null;
-                var children = this.props["children"]
-                    ? React.createElement("ul", {"style": this.props.expanded ? { display: "block" } : null, "className": "dropdown-menu"}, this.props["children"])
-                    : null;
-                var aClasses = window.classNames("ajax-link", {
-                    "active-parent active": this.props.active || this.props.expanded
-                });
-                var liClasses = window.classNames({ "dropdown": this.props["children"] });
-                return (React.createElement("li", {"className": liClasses}, React.createElement("a", {"className": aClasses, "onClick": function () { return _this.onClick(); }}, icon, React.createElement("span", {"className": "hidden-xs"}, this.props.caption)), children));
-            };
-            MenuItem.prototype.onClick = function () {
-                if (this.props.onClick)
-                    this.props.onClick();
-            };
-            return MenuItem;
-        })(React.Component);
         var MainMenu = (function (_super) {
             __extends(MainMenu, _super);
             function MainMenu(props) {
                 _super.call(this, props);
-                this.state = { active: MainMenuItem.Explore };
+                this._nodes = [
+                    { name: "Explore", id: "explore" },
+                    { name: "Manage", id: "manage", children: [
+                            { name: "Applications", id: "manage.apps" },
+                            { name: "Networks", id: "manage.nets" },
+                            { name: "Clusters", id: "manage.cluster" },
+                            { name: "Servers", id: "manage.servers", children: [
+                                    { name: "Applications", id: "manage.apps1" },
+                                    { name: "Networks", id: "manage.nets2" },
+                                    { name: "Clusters", id: "manage.cluster3" },
+                                    { name: "Servers", id: "manage.servers4" },
+                                ] },
+                        ] },
+                    { name: "Users", id: "users", active: true },
+                ];
+                this.state = this.getState();
             }
-            MainMenu.prototype.setActive = function (item) {
-                this.setState({ active: item });
-                if (this.props.onChanged)
-                    this.props.onChanged(item);
-            };
-            MainMenu.prototype.onClick = function () {
-                console.log("clicked");
-            };
             MainMenu.prototype.render = function () {
                 var _this = this;
-                var activeIf = function (item) { return _this.state.active == item ? "active" : null; };
-                return (React.createElement(Menu, {"className": "nav main-menu"}, React.createElement(MenuItem, {"caption": "Explore", "icon": "fa fa-pencil-square-o", "id": "explore"}), React.createElement(MenuItem, {"caption": "Manage", "icon": "fa fa-pencil-square-o", "id": "manage"}, React.createElement(MenuItem, {"caption": "Applications", "id": "manage.apps"}), React.createElement(MenuItem, {"caption": "Networks", "id": "manage.nets"}), React.createElement(MenuItem, {"caption": "Clusters", "id": "manage.clusters"}), React.createElement(MenuItem, {"caption": "Servers", "id": "manage.servers"})), React.createElement(MenuItem, {"caption": "Users", "icon": "fa fa-pencil-square-o", "id": "explore"})));
+                return (React.createElement("ul", {"className": "nav main-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); })));
+            };
+            MainMenu.prototype.renderNode = function (node) {
+                var _this = this;
+                var hasChildren = (node.children && node.children.length > 0);
+                var liClasses = hasChildren ? "dropdown" : null;
+                var aClasses = window.classNames("ajax-link", {
+                    "dropdown-toggle": hasChildren,
+                    "active-parent": node.active || node.expanded,
+                    "active": node.active || node.expanded
+                });
+                var children = hasChildren
+                    ? React.createElement("ul", {"className": "dropdown-menu", "style": node.expanded ? { display: "block" } : null}, node.children.map(function (n) { return _this.renderNode(n); }))
+                    : null;
+                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "className": aClasses, "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": "fa fa-list"}), React.createElement("span", {"className": "hidden-xs"}, node.name)), children));
+            };
+            MainMenu.prototype.onClick = function (id) {
+                this.traverseNodes(function (node, path) {
+                    if (node.id == id) {
+                        node.active = true;
+                        node.expanded = (node.children && node.children.length > 0)
+                            ? !(node.expanded || false)
+                            : false;
+                        path.forEach(function (n) { return n.expanded = true; }); // expand all parent nodes
+                    }
+                    else {
+                        node.active = false;
+                        node.expanded = false;
+                    }
+                });
+                this.setState(this.getState());
+                if (this.props.onClick)
+                    this.props.onClick(id);
+            };
+            MainMenu.prototype.traverseNodes = function (fn) {
+                var iterate = function (nodes, path) {
+                    if (!nodes)
+                        return;
+                    nodes.forEach(function (n) {
+                        fn(n, path);
+                        path.push(n);
+                        iterate(n.children, path);
+                        path.splice(path.length - 1, 1);
+                    });
+                };
+                iterate(this._nodes, []);
+            };
+            MainMenu.prototype.getState = function () {
+                return { model: $.extend(true, {}, this._nodes) }; // clone model
             };
             return MainMenu;
         })(React.Component);
         Views.MainMenu = MainMenu;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
+{
+}
 ///<reference path="../_references.ts" />
 var Client;
 (function (Client) {
@@ -965,7 +1020,7 @@ var Client;
                 _super.apply(this, arguments);
             }
             ManageView.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement("div", {"className": "preloader"}, React.createElement("img", {"src": "img/devoops_getdata.gif", "className": "devoops-getdata", "alt": "preloader"})), React.createElement("div", {"id": "ajax-content"})));
+                return (React.createElement("div", null, React.createElement("div", {"id": "ajax-content"}, "This is Manage view")));
             };
             ManageView.prototype.componentWillUnmount = function () {
                 console.log("Unmount!!!!");

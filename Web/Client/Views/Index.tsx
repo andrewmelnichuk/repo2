@@ -3,25 +3,23 @@
 module Client.Views {
 
   import Dictionary = Client.Common.Dictionary;
-  import EventMgr = Client.Events.EventManager;
 
-  export class Index extends React.Component<any, {activeItem: MainMenuItem}> {
+  export class Index extends React.Component<any, any> {
 
-    private activeItem = MainMenuItem.Explore;
+    private contentViews = new Dictionary<string, JSX.Element>()
+      .add("explore", <ExploreView />)
+      .add("manage", <ManageView />);
 
-    private contentViews = new Dictionary<MainMenuItem, JSX.Element>()
-      .add(MainMenuItem.Explore, <ExplorerView />)
-      .add(MainMenuItem.Manage, <ManageView />);
-
-    private mainMenuChanged(item: MainMenuItem) {
-      this.setState({activeItem: item});
+    private onClick(item: string) {
+      if (this.contentViews.containsKey(item))
+        this.setState({activeItem: item});
     }
-    
+
     public constructor() {
       super();
-      this.state = {activeItem: this.activeItem};
+      this.state = {activeItem: "explore"};
     }
-    
+
     public render() {
       return (
         <div>
@@ -31,7 +29,7 @@ module Client.Views {
           <div id="main" className="container-fluid">
             <div className="row">
               <div id="sidebar-left" className="col-xs-2 col-sm-2">
-                <MainMenu activeItem={MainMenuItem.Explore} onChanged={this.mainMenuChanged.bind(this)} />
+                <MainMenu onClick={this.onClick.bind(this)} />
               </div>
               <div id="content" className="col-xs-12 col-sm-10">
                 {this.contentViews.get(this.state.activeItem)}
@@ -43,7 +41,6 @@ module Client.Views {
     }
   }
 }
-
 
 window.onload = () => {
   

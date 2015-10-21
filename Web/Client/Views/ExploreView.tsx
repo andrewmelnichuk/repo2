@@ -1,6 +1,6 @@
 namespace Client.Views {
 
-  export class ExplorerView extends React.Component<any, any> {
+  export class ExploreView extends React.Component<any, any> {
 
     public componentDidMount() {
       var node = React.findDOMNode(this.refs["jstree"]);
