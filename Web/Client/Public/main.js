@@ -90,6 +90,7 @@ var Client;
                 this[key.toString()] = value;
                 this._keys.push(key);
                 this._values.push(value);
+                return this;
             };
             Dictionary.prototype.remove = function (key) {
                 var index = this._keys.indexOf(key, 0);
@@ -417,97 +418,29 @@ var Client;
             __extends(ExplorerView, _super);
             function ExplorerView() {
                 _super.apply(this, arguments);
-                this.template = "\n      <div class=\"row\">\n        <div class=\"col-md-3\" style=\"border: 0px solid red\">\n          <div class=\"panel panel-default\">\n            <div class=\"panel-heading\">\n              <h3 class=\"panel-title\">Games</h3>\n            </div>\n            <div class=\"panel-body\" style=\"padding:10px;\">\n              <div id=\"jstree\">\n                <ul>\n                  <li>Production\n                    <ul>\n                      <li>Total Domination\n                        <ul>\n                          <li>Manage</li>\n                          <li>Configs</li>\n                          <li>Logs</li>\n                          <li>Perfs</li>\n                          <li>Servers</li>\n                        </ul>\n                      </li>\n                      <li>Sparta</li>\n                      <li>Pirates</li>\n                      <li>Elves</li>\n                      <li>Nords</li>\n                    </ul>\n                  </li>\n                  <li>Supertest\n                    <ul>\n                      <li>Total Domination</li>\n                    </ul>\n                  </li>\n                </ul>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"col-md-9\" style=\"border: 1px solid red\">\n          <h1>Title</h1>\n        </div>\n      </div>\n    ";
             }
-            ExplorerView.prototype.initialize = function () {
+            ExplorerView.prototype.componentDidMount = function () {
+                var node = React.findDOMNode(this.refs["jstree"]);
+                $(node).jstree();
+                console.log("tree did mount");
+            };
+            ExplorerView.prototype.componentDidUpdate = function () {
+                console.log("componentDidUpdate");
+            };
+            ExplorerView.prototype.shouldComponentUpdate = function () {
+                console.log("componentShouldUpdate");
+                return false;
+            };
+            ExplorerView.prototype.componentWilUnmount = function () {
+                var node = React.findDOMNode(this.refs["jstree"]);
+                $(node).jstree("destroy");
             };
             ExplorerView.prototype.render = function () {
-                this.$el.html(this.template);
-                this.$el.find("#jstree").jstree();
-                return this;
+                return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
             };
             return ExplorerView;
-        })(Client.Views.ViewBase);
-        Views.ExplorerView = ExplorerView;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-///<reference path="../_references.ts" />
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        var EventMgr = Client.Events.EventManager;
-        var TopNav = (function (_super) {
-            __extends(TopNav, _super);
-            function TopNav() {
-                _super.apply(this, arguments);
-                this.template = "\n      <nav class=\"navbar navbar-default\">\n        <div class=\"container-fluid\">\n\n          <!-- Brand and toggle get grouped for better mobile display -->\n          <div class=\"navbar-header\">\n            <a class=\"navbar-brand\" href=\"#\">Plarium</a>\n          </div>\n      \n          <!-- Collect the nav links, forms, and other content for toggling -->\n          <ul class=\"nav navbar-nav\">\n            <li><a href=\"#\" data-menu-item=\"explore\">Explore <span class=\"sr-only\">(current)</span></a></li>\n            <li><a href=\"#\" data-menu-item=\"manage\">Manage</a></li>\n          </ul>\n          <ul class=\"nav navbar-nav navbar-right\">\n            <li class=\"dropdown\">\n              <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\">Username <span class=\"caret\"></span></a>\n              <ul class=\"dropdown-menu\">\n                <li><a href=\"#\" data-menu-item=\"settings\">Settings</a></li>\n                <li><a href=\"#\" data-menu-item=\"logout\">Logout</a></li>\n              </ul>\n            </li>\n          </ul>\n        </div>\n      </nav>\n    ";
-            }
-            TopNav.prototype.render = function () {
-                _super.prototype.render.call(this);
-                this.$el.html(this.template);
-                return this;
-            };
-            TopNav.prototype.viewEvents = function () {
-                return {
-                    "click a[data-menu-item]": this.menuItemClick,
-                };
-            };
-            TopNav.prototype.menuItemClick = function (event) {
-                var menuItem = $(event.target).attr("data-menu-item");
-                this.setActiveMenuItem(menuItem);
-                EventMgr.raise("ui.views.top-nav", "change", menuItem);
-            };
-            TopNav.prototype.setActiveMenuItem = function (item) {
-                if (this.$activeMenuItem)
-                    this.$activeMenuItem.parent("li").removeClass("active");
-                this.$activeMenuItem = this.$el.find("a[data-menu-item='" + item + "']");
-                if (this.$activeMenuItem)
-                    this.$activeMenuItem.parent("li").addClass("active");
-            };
-            return TopNav;
-        })(Views.ViewBase);
-        Views.TopNav = TopNav;
-    })(Views = Client.Views || (Client.Views = {}));
-})(Client || (Client = {}));
-///<reference path="../_references.ts" />
-var Client;
-(function (Client) {
-    var Views;
-    (function (Views) {
-        (function (MenuItem) {
-            MenuItem[MenuItem["Explore"] = 0] = "Explore";
-            MenuItem[MenuItem["Manage"] = 1] = "Manage";
-            MenuItem[MenuItem["UserSettings"] = 2] = "UserSettings";
-            MenuItem[MenuItem["UserLogout"] = 3] = "UserLogout";
-        })(Views.MenuItem || (Views.MenuItem = {}));
-        var MenuItem = Views.MenuItem;
-        ;
-        var TopNavProps = (function () {
-            function TopNavProps() {
-            }
-            return TopNavProps;
-        })();
-        Views.TopNavProps = TopNavProps;
-        var TopNav1 = (function (_super) {
-            __extends(TopNav1, _super);
-            function TopNav1(props) {
-                _super.call(this, props);
-                this.state = { active: this.props.activeItem };
-            }
-            TopNav1.prototype.setActive = function (item) {
-                this.setState({ active: item });
-                if (this.props.onChanged)
-                    this.props.onChanged(item);
-            };
-            TopNav1.prototype.render = function () {
-                var _this = this;
-                var activeIf = function (item) { return _this.state.active == item ? "active" : null; };
-                return (React.createElement("nav", {"className": "navbar navbar-default"}, React.createElement("div", {"className": "container-fluid"}, React.createElement("div", {"className": "navbar-header"}, React.createElement("a", {"className": "navbar-brand", "href": "#"}, "Plarium")), React.createElement("ul", {"className": "nav navbar-nav"}, React.createElement("li", {"className": activeIf(MenuItem.Explore)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.Explore); }}, "Explore")), React.createElement("li", {"className": activeIf(MenuItem.Manage)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.Manage); }}, "Manage"))), React.createElement("ul", {"className": "nav navbar-nav navbar-right"}, React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"href": "#", "className": "dropdown-toggle", "data-toggle": "dropdown", "role": "button", "aria-haspopup": "true", "aria-expanded": "false"}, "Username ", React.createElement("span", {"className": "caret"})), React.createElement("ul", {"className": "dropdown-menu"}, React.createElement("li", {"className": activeIf(MenuItem.UserSettings)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.UserSettings); }}, "Settings")), React.createElement("li", {"className": activeIf(MenuItem.UserLogout)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.UserLogout); }}, "Logout"))))))));
-            };
-            return TopNav1;
         })(React.Component);
-        Views.TopNav1 = TopNav1;
+        Views.ExplorerView = ExplorerView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 var Client;
@@ -601,15 +534,14 @@ var Client;
 ///<reference path="typings/jquery/jquery.d.ts"/>
 ///<reference path="typings/react/react.d.ts"/>
 ///<reference path="typings/react/react-global.d.ts"/>
+///<reference path="typings/window/window.d.ts"/>
 ///<reference path="Common/Dictionary.ts"/>
 ///<reference path="Events/EventManager.ts"/>
 ///<reference path="Models/App.ts"/>
 ///<reference path="Models/Entity.ts"/>
 ///<reference path="Models/User.ts"/>
 ///<reference path="Views/ViewBase.ts"/>
-///<reference path="Views/ExplorerView.ts"/>
-///<reference path="Views/TopNav.ts"/>
-///<reference path="Views/TopNav.tsx"/>
+///<reference path="Views/ExplorerView.tsx"/>
 ///<reference path="Views/SettingsView.ts"/>
 ///<reference path="Views/Manage/ManageView.ts"/>
 ///<reference path="Views/Manage/NAvView.ts"/>
@@ -877,36 +809,22 @@ var LikeButton = (function (_super) {
     };
     return LikeButton;
 })(React.Component);
+///<reference path="../_references.ts" />
 var Client;
 (function (Client) {
     var Views;
     (function (Views) {
-        var ExplorerView1 = (function (_super) {
-            __extends(ExplorerView1, _super);
-            function ExplorerView1() {
+        var Header = (function (_super) {
+            __extends(Header, _super);
+            function Header() {
                 _super.apply(this, arguments);
             }
-            ExplorerView1.prototype.componentDidMount = function () {
-                var node = React.findDOMNode(this.refs["jstree"]);
-                $(node).jstree();
+            Header.prototype.render = function () {
+                return (React.createElement("header", {"className": "navbar"}, React.createElement("div", {"className": "container-fluid expanded-panel"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "logo", "className": "col-xs-12 col-sm-2"}, React.createElement("a", {"href": "index.html"}, "Plarium")), React.createElement("div", {"id": "top-panel", "className": "col-xs-12 col-sm-10"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"className": "col-xs-8 col-sm-4"}, React.createElement("a", {"href": "#", "className": "show-sidebar"}, React.createElement("i", {"className": "fa fa-bars"})), React.createElement("div", {"id": "search"}, React.createElement("input", {"type": "text", "placeholder": "search"}), React.createElement("i", {"className": "fa fa-search"}))), React.createElement("div", {"className": "col-xs-4 col-sm-8 top-panel-right"}, React.createElement("ul", {"className": "nav navbar-nav pull-right panel-menu"}, React.createElement("li", {"className": "hidden-xs"}, React.createElement("a", {"href": "index.html", "className": "modal-link"}, React.createElement("i", {"className": "fa fa-bell"}), React.createElement("span", {"className": "badge"}, "7"))), React.createElement("li", {"className": "hidden-xs"}, React.createElement("a", {"className": "ajax-link", "href": "ajax/calendar.html"}, React.createElement("i", {"className": "fa fa-calendar"}), React.createElement("span", {"className": "badge"}, "7"))), React.createElement("li", {"className": "hidden-xs"}, React.createElement("a", {"href": "ajax/page_messages.html", "className": "ajax-link"}, React.createElement("i", {"className": "fa fa-envelope"}), React.createElement("span", {"className": "badge"}, "7"))), React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"href": "#", "className": "dropdown-toggle account", "data-toggle": "dropdown"}, React.createElement("div", {"className": "avatar"}, React.createElement("img", {"src": "img/avatar.jpg", "className": "img-rounded", "alt": "avatar"})), React.createElement("i", {"className": "fa fa-angle-down pull-right"}), React.createElement("div", {"className": "user-mini pull-right"}, React.createElement("span", {"className": "welcome"}, "Welcome,"), React.createElement("span", null, "Jane Devoops"))), React.createElement("ul", {"className": "dropdown-menu"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-user"}), React.createElement("span", null, "Profile"))), React.createElement("li", null, React.createElement("a", {"href": "ajax/page_messages.html", "className": "ajax-link"}, React.createElement("i", {"className": "fa fa-envelope"}), React.createElement("span", null, "Messages"))), React.createElement("li", null, React.createElement("a", {"href": "ajax/gallery_simple.html", "className": "ajax-link"}, React.createElement("i", {"className": "fa fa-picture-o"}), React.createElement("span", null, "Albums"))), React.createElement("li", null, React.createElement("a", {"href": "ajax/calendar.html", "className": "ajax-link"}, React.createElement("i", {"className": "fa fa-tasks"}), React.createElement("span", null, "Tasks"))), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-cog"}), React.createElement("span", null, "Settings"))), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-power-off"}), React.createElement("span", null, "Logout")))))))))))));
             };
-            ExplorerView1.prototype.componentDidUpdate = function () {
-                console.log("componentDidUpdate");
-            };
-            ExplorerView1.prototype.shouldComponentUpdate = function () {
-                console.log("componentShouldUpdate");
-                return false;
-            };
-            ExplorerView1.prototype.componentWilUnmount = function () {
-                var node = React.findDOMNode(this.refs["jstree"]);
-                $(node).jstree("destroy");
-            };
-            ExplorerView1.prototype.render = function () {
-                return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
-            };
-            return ExplorerView1;
+            return Header;
         })(React.Component);
-        Views.ExplorerView1 = ExplorerView1;
+        Views.Header = Header;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 ///<reference path="../_references.ts" />
@@ -915,70 +833,31 @@ var Client;
     var Views;
     (function (Views) {
         var Dictionary = Client.Common.Dictionary;
-        var Main = (function (_super) {
-            __extends(Main, _super);
-            function Main() {
-                _super.apply(this, arguments);
-                this._vwTopNav = new Views.TopNav(this);
-                this.viewCreators = new Dictionary({
-                    "explore": function (parent) { return new Views.ExplorerView(parent); },
-                    "manage": function (parent) { return new Client.Views.Manage.ManageView(parent); },
-                    "settings": function (parent) { return new Views.SettingsView(parent); }
-                });
+        var Index = (function (_super) {
+            __extends(Index, _super);
+            function Index() {
+                _super.call(this);
+                this.activeItem = Views.MainMenuItem.Explore;
+                this.contentViews = new Dictionary()
+                    .add(Views.MainMenuItem.Explore, React.createElement(Views.ExplorerView, null))
+                    .add(Views.MainMenuItem.Manage, React.createElement(Views.ManageView, null));
+                this.state = { activeItem: this.activeItem };
             }
-            Main.prototype.render = function () {
-                this.$el.html("\n        <div class=\"container\">\n          <div class=\"top-nav\"></div>\n          <div class=\"content\"></div>\n        </div>\n      ");
-                this.$el.find(".container .top-nav").append(this._vwTopNav.render().$el);
-                return this;
+            Index.prototype.mainMenuChanged = function (item) {
+                this.setState({ activeItem: item });
             };
-            Main.prototype.mgrEvents = function () {
-                return {
-                    "change ui.views.top-nav": this.setContentView
-                };
+            Index.prototype.render = function () {
+                return (React.createElement("div", null, React.createElement(Views.ScreenSaver, null), React.createElement(Views.ModalBox, null), React.createElement(Views.Header, null), React.createElement("div", {"id": "main", "className": "container-fluid"}, React.createElement("div", {"className": "row"}, React.createElement("div", {"id": "sidebar-left", "className": "col-xs-2 col-sm-2"}, React.createElement(Views.MainMenu, {"activeItem": Views.MainMenuItem.Explore, "onChanged": this.mainMenuChanged.bind(this)})), React.createElement("div", {"id": "content", "className": "col-xs-12 col-sm-10"}, this.contentViews.get(this.state.activeItem))))));
             };
-            Main.prototype.setContentView = function (menuItem) {
-                if (!this.viewCreators.containsKey(menuItem))
-                    throw new Error("Unknown menu item '" + menuItem + "'.");
-                if (this._vmContent)
-                    this._vmContent.destroy();
-                this._vmContent = this.viewCreators.get(menuItem)(this);
-                this.$el.find(".content").append(this._vmContent.render().$el);
-            };
-            return Main;
-        })(Views.ViewBase);
-        Views.Main = Main;
-        var Main1 = (function (_super) {
-            __extends(Main1, _super);
-            function Main1() {
-                _super.apply(this, arguments);
-            }
-            // private _vmContent: ViewBase;
-            // private viewCreators = new Dictionary<string, (parent: ViewBase) => ViewBase>({
-            //   "explore": parent => new ExplorerView(parent),
-            //   "manage": parent => new Client.Views.Manage.ManageView(parent),
-            //   "settings": parent => new SettingsView(parent)
-            // });
-            Main1.prototype.topNavChanged = function (item) {
-                console.log(item);
-            };
-            Main1.prototype.render = function () {
-                return (React.createElement("div", {"className": "container"}, React.createElement("div", {"className": "top-nav"}, React.createElement(Views.TopNav1, {"activeItem": Views.MenuItem.Explore, "onChanged": this.topNavChanged})), React.createElement("div", {"className": "content"})));
-            };
-            return Main1;
+            return Index;
         })(React.Component);
-        Views.Main1 = Main1;
+        Views.Index = Index;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
-var User = Client.Models.User;
-var TopNav = Client.Views.TopNav1;
-var ExplorerView = Client.Views.ExplorerView1;
 window.onload = function () {
-    // var main = new Client.Views.Main();
-    // $("body").append(main.render().$el);
-    var view = React.createElement(Client.Views.Main1, null);
-    React.render(view, document.body);
+    React.render(React.createElement(Client.Views.Index, null), document.getElementById("body"));
+    //React.render(<Client.Views.ExplorerView />, document.getElementById("body"));
     // React.unmountComponentAtNode(document.body);
-    //console.log(new A().f == new A().f);
     // main.postRender();
     // $("#tt").tree();
     // $("#grd").datagrid();
@@ -991,3 +870,184 @@ window.onload = function () {
     //   console.log(Data.users.all().length);
     // });
 };
+///<reference path="../_references.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        (function (MainMenuItem) {
+            MainMenuItem[MainMenuItem["Explore"] = 0] = "Explore";
+            MainMenuItem[MainMenuItem["Manage"] = 1] = "Manage";
+        })(Views.MainMenuItem || (Views.MainMenuItem = {}));
+        var MainMenuItem = Views.MainMenuItem;
+        ;
+        var MainMenuProps = (function () {
+            function MainMenuProps() {
+            }
+            return MainMenuProps;
+        })();
+        Views.MainMenuProps = MainMenuProps;
+        ;
+        var MenuItemProps = (function () {
+            function MenuItemProps() {
+            }
+            return MenuItemProps;
+        })();
+        ;
+        var Menu = (function (_super) {
+            __extends(Menu, _super);
+            function Menu(props) {
+                _super.call(this, props);
+            }
+            Menu.prototype.render = function () {
+                return (React.createElement("ul", {"className": this.props.className}, this.props["children"]));
+            };
+            return Menu;
+        })(React.Component);
+        var MenuItem = (function (_super) {
+            __extends(MenuItem, _super);
+            function MenuItem(props) {
+                _super.call(this, props);
+                this.state = { active: props.active };
+            }
+            MenuItem.prototype.render = function () {
+                var _this = this;
+                var icon = this.props.icon
+                    ? React.createElement("i", {"className": this.props.icon})
+                    : null;
+                var children = this.props["children"]
+                    ? React.createElement("ul", {"style": this.props.expanded ? { display: "block" } : null, "className": "dropdown-menu"}, this.props["children"])
+                    : null;
+                var aClasses = window.classNames("ajax-link", {
+                    "active-parent active": this.props.active || this.props.expanded
+                });
+                var liClasses = window.classNames({ "dropdown": this.props["children"] });
+                return (React.createElement("li", {"className": liClasses}, React.createElement("a", {"className": aClasses, "onClick": function () { return _this.onClick(); }}, icon, React.createElement("span", {"className": "hidden-xs"}, this.props.caption)), children));
+            };
+            MenuItem.prototype.onClick = function () {
+                if (this.props.onClick)
+                    this.props.onClick();
+            };
+            return MenuItem;
+        })(React.Component);
+        var MainMenu = (function (_super) {
+            __extends(MainMenu, _super);
+            function MainMenu(props) {
+                _super.call(this, props);
+                this.state = { active: MainMenuItem.Explore };
+            }
+            MainMenu.prototype.setActive = function (item) {
+                this.setState({ active: item });
+                if (this.props.onChanged)
+                    this.props.onChanged(item);
+            };
+            MainMenu.prototype.onClick = function () {
+                console.log("clicked");
+            };
+            MainMenu.prototype.render = function () {
+                var _this = this;
+                var activeIf = function (item) { return _this.state.active == item ? "active" : null; };
+                return (React.createElement(Menu, {"className": "nav main-menu"}, React.createElement(MenuItem, {"caption": "Explore", "icon": "fa fa-pencil-square-o", "id": "explore"}), React.createElement(MenuItem, {"caption": "Manage", "icon": "fa fa-pencil-square-o", "id": "manage"}, React.createElement(MenuItem, {"caption": "Applications", "id": "manage.apps"}), React.createElement(MenuItem, {"caption": "Networks", "id": "manage.nets"}), React.createElement(MenuItem, {"caption": "Clusters", "id": "manage.clusters"}), React.createElement(MenuItem, {"caption": "Servers", "id": "manage.servers"})), React.createElement(MenuItem, {"caption": "Users", "icon": "fa fa-pencil-square-o", "id": "explore"})));
+            };
+            return MainMenu;
+        })(React.Component);
+        Views.MainMenu = MainMenu;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../_references.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ManageView = (function (_super) {
+            __extends(ManageView, _super);
+            function ManageView() {
+                _super.apply(this, arguments);
+            }
+            ManageView.prototype.render = function () {
+                return (React.createElement("div", null, React.createElement("div", {"className": "preloader"}, React.createElement("img", {"src": "img/devoops_getdata.gif", "className": "devoops-getdata", "alt": "preloader"})), React.createElement("div", {"id": "ajax-content"})));
+            };
+            ManageView.prototype.componentWillUnmount = function () {
+                console.log("Unmount!!!!");
+            };
+            return ManageView;
+        })(React.Component);
+        Views.ManageView = ManageView;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../_references.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ModalBox = (function (_super) {
+            __extends(ModalBox, _super);
+            function ModalBox() {
+                _super.apply(this, arguments);
+            }
+            ModalBox.prototype.render = function () {
+                return (React.createElement("div", {"id": "modalbox"}, React.createElement("div", {"className": "devoops-modal"}, React.createElement("div", {"className": "devoops-modal-header"}, React.createElement("div", {"className": "modal-header-name"}, React.createElement("span", null, "Basic table")), React.createElement("div", {"className": "box-icons"}, React.createElement("a", {"className": "close-link"}, React.createElement("i", {"className": "fa fa-times"})))), React.createElement("div", {"className": "devoops-modal-inner"}), React.createElement("div", {"className": "devoops-modal-bottom"}))));
+            };
+            return ModalBox;
+        })(React.Component);
+        Views.ModalBox = ModalBox;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../_references.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        var ScreenSaver = (function (_super) {
+            __extends(ScreenSaver, _super);
+            function ScreenSaver() {
+                _super.apply(this, arguments);
+            }
+            ScreenSaver.prototype.render = function () {
+                return (React.createElement("div", {"id": "screensaver"}, React.createElement("canvas", {"id": "canvas"}), React.createElement("i", {"className": "fa fa-lock", "id": "screen_unlock"})));
+            };
+            return ScreenSaver;
+        })(React.Component);
+        Views.ScreenSaver = ScreenSaver;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));
+///<reference path="../_references.ts" />
+var Client;
+(function (Client) {
+    var Views;
+    (function (Views) {
+        (function (MenuItem) {
+            MenuItem[MenuItem["Explore"] = 0] = "Explore";
+            MenuItem[MenuItem["Manage"] = 1] = "Manage";
+            MenuItem[MenuItem["UserSettings"] = 2] = "UserSettings";
+            MenuItem[MenuItem["UserLogout"] = 3] = "UserLogout";
+        })(Views.MenuItem || (Views.MenuItem = {}));
+        var MenuItem = Views.MenuItem;
+        ;
+        var TopNavProps = (function () {
+            function TopNavProps() {
+            }
+            return TopNavProps;
+        })();
+        Views.TopNavProps = TopNavProps;
+        var TopNav1 = (function (_super) {
+            __extends(TopNav1, _super);
+            function TopNav1(props) {
+                _super.call(this, props);
+                this.state = { active: this.props.activeItem };
+            }
+            TopNav1.prototype.setActive = function (item) {
+                this.setState({ active: item });
+                if (this.props.onChanged)
+                    this.props.onChanged(item);
+            };
+            TopNav1.prototype.render = function () {
+                var _this = this;
+                var activeIf = function (item) { return _this.state.active == item ? "active" : null; };
+                return (React.createElement("nav", {"className": "navbar navbar-default"}, React.createElement("div", {"className": "container-fluid"}, React.createElement("div", {"className": "navbar-header"}, React.createElement("a", {"className": "navbar-brand", "href": "#"}, "Plarium")), React.createElement("ul", {"className": "nav navbar-nav"}, React.createElement("li", {"className": activeIf(MenuItem.Explore)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.Explore); }}, "Explore")), React.createElement("li", {"className": activeIf(MenuItem.Manage)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.Manage); }}, "Manage"))), React.createElement("ul", {"className": "nav navbar-nav navbar-right"}, React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"href": "#", "className": "dropdown-toggle", "data-toggle": "dropdown", "role": "button", "aria-haspopup": "true", "aria-expanded": "false"}, "Username ", React.createElement("span", {"className": "caret"})), React.createElement("ul", {"className": "dropdown-menu"}, React.createElement("li", {"className": activeIf(MenuItem.UserSettings)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.UserSettings); }}, "Settings")), React.createElement("li", {"className": activeIf(MenuItem.UserLogout)}, React.createElement("a", {"href": "#", "onClick": function () { return _this.setActive(MenuItem.UserLogout); }}, "Logout"))))))));
+            };
+            return TopNav1;
+        })(React.Component);
+        Views.TopNav1 = TopNav1;
+    })(Views = Client.Views || (Client.Views = {}));
+})(Client || (Client = {}));

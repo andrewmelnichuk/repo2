@@ -17,7 +17,7 @@ module Client.Common {
     private _keys: TKey[] = [];
     private _values: TValue[] = [];
 
-    constructor(init?: Object) {
+    constructor(init?: {key: TKey, value: TValue}) {
       if (!init) return;
       for (var key in init) {
         if (init.hasOwnProperty(key))
@@ -29,10 +29,11 @@ module Client.Common {
       return this[key.toString()];
     }
 
-    public add(key: TKey, value: TValue) {
+    public add(key: TKey, value: TValue): Dictionary<TKey, TValue> {
       this[key.toString()] = value;
       this._keys.push(key);
       this._values.push(value);
+      return this;
     }
   
     public remove(key: TKey) {
