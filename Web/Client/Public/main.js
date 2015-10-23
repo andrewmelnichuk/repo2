@@ -893,7 +893,7 @@ var Client;
                 _super.call(this);
                 this.contentViews = new Dictionary()
                     .add("explore", React.createElement(Views.ExploreView, null))
-                    .add("manage", React.createElement(Views.ManageView, null));
+                    .add("manage.apps", React.createElement(Views.ManageView, null));
                 this.state = { activeItem: "explore" };
             }
             Index.prototype.onClick = function (item) {
@@ -909,7 +909,7 @@ var Client;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
 window.onload = function () {
-    React.render(React.createElement(Client.Views.Index, null), document.getElementById("body"));
+    React.render(React.createElement(Client.Views.Index, null), document.body);
     //React.render(<Client.Views.ExplorerView />, document.getElementById("body"));
     // React.unmountComponentAtNode(document.body);
     // main.postRender();
@@ -1023,10 +1023,7 @@ var Client;
                 _super.apply(this, arguments);
             }
             ManageView.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement("div", {"id": "ajax-content"}, "This is Manage view")));
-            };
-            ManageView.prototype.componentWillUnmount = function () {
-                console.log("Unmount!!!!");
+                return (React.createElement("div", null, React.createElement("div", {"className": "preloader"}, React.createElement("img", {"src": "img/devoops_getdata.gif", "className": "devoops-getdata", "alt": "preloader"})), React.createElement("div", {"id": "ajax-content"}, "This is Manage Apps view")));
             };
             return ManageView;
         })(React.Component);

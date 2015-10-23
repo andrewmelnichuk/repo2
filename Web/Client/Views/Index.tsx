@@ -8,7 +8,7 @@ module Client.Views {
 
     private contentViews = new Dictionary<string, JSX.Element>()
       .add("explore", <ExploreView />)
-      .add("manage", <ManageView />);
+      .add("manage.apps", <ManageView />);
 
     private onClick(item: string) {
       if (this.contentViews.containsKey(item))
@@ -44,7 +44,7 @@ module Client.Views {
 
 window.onload = () => {
   
-  React.render(<Client.Views.Index />, document.getElementById("body"));
+  React.render(<Client.Views.Index />, document.body);
   //React.render(<Client.Views.ExplorerView />, document.getElementById("body"));
   
   // React.unmountComponentAtNode(document.body);
