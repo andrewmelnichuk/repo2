@@ -605,6 +605,35 @@ var Client;
             function Content() {
                 _super.apply(this, arguments);
             }
+            Content.prototype.componentWillMount = function () {
+                window.addEventListener("load", this.updateHeight);
+                window.addEventListener("resize", this.updateHeight);
+            };
+            Content.prototype.componentDidMount = function () {
+                this.updateHeight();
+            };
+            Content.prototype.componentUnmount = function () {
+                window.removeEventListener("load", this.updateHeight);
+                window.removeEventListener("resize", this.updateHeight);
+            };
+            Content.prototype.updateHeight = function () {
+                var topOffset = 50;
+                var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+                if (width < 768) {
+                    $('div.navbar-collapse').addClass('collapse');
+                    topOffset = 100; // 2-row-menu
+                }
+                else {
+                    $('div.navbar-collapse').removeClass('collapse');
+                }
+                var height = ((window.innerHeight > 0) ? window.innerHeight : screen.height) - 1;
+                height = height - topOffset;
+                if (height < 1)
+                    height = 1;
+                if (height > topOffset) {
+                    $("#page-wrapper").css("min-height", (height) + "px");
+                }
+            };
             Content.prototype.render = function () {
                 return (React.createElement("div", {"id": "page-wrapper"}, this.props["children"]));
             };
