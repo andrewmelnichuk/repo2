@@ -10,10 +10,6 @@
 ///<reference path="Models/App.ts"/>
 ///<reference path="Models/Entity.ts"/>
 ///<reference path="Models/User.ts"/>
-///<reference path="Views/ViewBase.ts"/>
-///<reference path="Views/ExploreView.tsx"/>
-///<reference path="Views/SettingsView.ts"/>
-///<reference path="Views/Manage/ManageView.ts"/>
-///<reference path="Views/Manage/NAvView.ts"/>
+///<reference path="Views/ExplorerView.tsx"/>
 ///<reference path="Config.ts"/>
 ///<reference path="Utils.ts"/>
