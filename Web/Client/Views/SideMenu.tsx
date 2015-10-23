@@ -39,11 +39,16 @@ namespace Client.Views {
       this.state = this.getState();
     }
 
+    public componentDidMount() {
+      var node = React.findDOMNode(this.refs["side-menu"]);
+      $(node).metisMenu();
+    }
+
     public render() {
       return (
         <div className="navbar-default sidebar" role="navigation">
             <div className="sidebar-nav navbar-collapse">
-                <ul className="nav" id="side-menu">
+                <ul className="nav" id="side-menu" ref="side-menu">
                     <li>
                         <a href="index.html"><i className="fa fa-dashboard fa-fw"></i> Dashboard</a>
                     </li>
