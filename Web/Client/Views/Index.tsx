@@ -26,10 +26,10 @@ module Client.Views {
           <Navigation>
             <Brand/>
             <TopMenu/>
-            <SideMenu onClick={null}/>
+            <SideMenu onClick={this.onClick.bind(this)}/>
           </Navigation>
           <Content>
-            This is content
+            {this.state.activeItem}
           </Content>
         </div>
       );

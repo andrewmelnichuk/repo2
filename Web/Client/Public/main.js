@@ -616,6 +616,9 @@ var Client;
                 window.removeEventListener("load", this.updateHeight);
                 window.removeEventListener("resize", this.updateHeight);
             };
+            Content.prototype.render = function () {
+                return (React.createElement("div", {"id": "page-wrapper"}, this.props["children"]));
+            };
             Content.prototype.updateHeight = function () {
                 var topOffset = 50;
                 var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
@@ -633,9 +636,6 @@ var Client;
                 if (height > topOffset) {
                     $("#page-wrapper").css("min-height", (height) + "px");
                 }
-            };
-            Content.prototype.render = function () {
-                return (React.createElement("div", {"id": "page-wrapper"}, this.props["children"]));
             };
             return Content;
         })(React.Component);
@@ -662,7 +662,7 @@ var Client;
                     this.setState({ activeItem: item });
             };
             Index.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement(Views.Navigation, null, React.createElement(Views.Brand, null), React.createElement(Views.TopMenu, null), React.createElement(Views.SideMenu, {"onClick": null})), React.createElement(Views.Content, null, "This is content")));
+                return (React.createElement("div", null, React.createElement(Views.Navigation, null, React.createElement(Views.Brand, null), React.createElement(Views.TopMenu, null), React.createElement(Views.SideMenu, {"onClick": this.onClick.bind(this)})), React.createElement(Views.Content, null, this.state.activeItem)));
             };
             return Index;
         })(React.Component);
@@ -869,29 +869,25 @@ var Client;
                 ];
                 this.state = this.getState();
             }
-            SideMenu.prototype.componentDidMount = function () {
-                var node = React.findDOMNode(this.refs["side-menu"]);
-                $(node).metisMenu();
+            SideMenu.prototype.componentDidUpdate = function () {
             };
             SideMenu.prototype.render = function () {
-                return (React.createElement("div", {"className": "navbar-default sidebar", "role": "navigation"}, React.createElement("div", {"className": "sidebar-nav navbar-collapse"}, React.createElement("ul", {"className": "nav", "id": "side-menu", "ref": "side-menu"}, React.createElement("li", null, React.createElement("a", {"href": "index.html"}, React.createElement("i", {"className": "fa fa-dashboard fa-fw"}), " Dashboard")), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-bar-chart-o fa-fw"}), " Charts", React.createElement("span", {"className": "fa arrow"})), React.createElement("ul", {"className": "nav nav-second-level"}, React.createElement("li", null, React.createElement("a", {"href": "flot.html"}, "Flot Charts")), React.createElement("li", null, React.createElement("a", {"href": "morris.html"}, "Morris.js Charts")))), React.createElement("li", null, React.createElement("a", {"href": "tables.html"}, React.createElement("i", {"className": "fa fa-table fa-fw"}), " Tables")), React.createElement("li", null, React.createElement("a", {"href": "forms.html"}, React.createElement("i", {"className": "fa fa-edit fa-fw"}), " Forms")), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-wrench fa-fw"}), " UI Elements", React.createElement("span", {"className": "fa arrow"})), React.createElement("ul", {"className": "nav nav-second-level"}, React.createElement("li", null, React.createElement("a", {"href": "panels-wells.html"}, "Panels and Wells")), React.createElement("li", null, React.createElement("a", {"href": "buttons.html"}, "Buttons")), React.createElement("li", null, React.createElement("a", {"href": "notifications.html"}, "Notifications")), React.createElement("li", null, React.createElement("a", {"href": "typography.html"}, "Typography")), React.createElement("li", null, React.createElement("a", {"href": "icons.html"}, " Icons")), React.createElement("li", null, React.createElement("a", {"href": "grid.html"}, "Grid")))), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-sitemap fa-fw"}), " Multi-Level Dropdown", React.createElement("span", {"className": "fa arrow"})), React.createElement("ul", {"className": "nav nav-second-level"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, "Second Level Item")), React.createElement("li", null, React.createElement("a", {"href": "#"}, "Second Level Item")), React.createElement("li", null, React.createElement("a", {"href": "#"}, "Third Level ", React.createElement("span", {"className": "fa arrow"})), React.createElement("ul", {"className": "nav nav-third-level"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, "Third Level Item")), React.createElement("li", null, React.createElement("a", {"href": "#"}, "Third Level Item")), React.createElement("li", null, React.createElement("a", {"href": "#"}, "Third Level Item")), React.createElement("li", null, React.createElement("a", {"href": "#"}, "Third Level Item")))))), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-files-o fa-fw"}), " Sample Pages", React.createElement("span", {"className": "fa arrow"})), React.createElement("ul", {"className": "nav nav-second-level"}, React.createElement("li", null, React.createElement("a", {"href": "blank.html"}, "Blank Page")), React.createElement("li", null, React.createElement("a", {"href": "login.html"}, "Login Page"))))))));
+                var _this = this;
+                return (React.createElement("div", {"className": "navbar-default sidebar", "role": "navigation"}, React.createElement("div", {"className": "sidebar-nav navbar-collapse"}, React.createElement("ul", {"className": "nav", "id": "side-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); }), ";"))));
             };
             SideMenu.prototype.renderNode = function (node) {
                 var _this = this;
+                var liClasses = node.expanded ? "expanded" : null;
+                var iconClasses = window.classNames("fa", node.icon, "fa-fw");
+                var ulClasses = window.classNames("nav", "nav-second-level", "collapse", { "in": node.expanded });
                 var hasChildren = (node.children && node.children.length > 0);
-                var liClasses = hasChildren ? "dropdown" : null;
-                var aClasses = window.classNames("ajax-link", {
-                    "dropdown-toggle": hasChildren,
-                    "active-parent": node.active || node.expanded,
-                    "active": node.active || node.expanded
-                });
-                var iconClasses = window.classNames("fa", node.icon, {
-                    "fa-angle-right": !node.icon
-                });
                 var children = hasChildren
-                    ? React.createElement("ul", {"className": "dropdown-menu", "style": node.expanded ? { display: "block" } : null}, node.children.map(function (n) { return _this.renderNode(n); }))
+                    ? React.createElement("ul", {"className": ulClasses}, node.children.map(function (n) { return _this.renderNode(n); }))
                     : null;
-                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "className": aClasses, "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": iconClasses}), React.createElement("span", {"className": "hidden-xs"}, node.name)), children));
+                var childrenIcon = hasChildren
+                    ? React.createElement("span", {"className": "fa arrow"})
+                    : null;
+                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": iconClasses}), " ", node.name, " ", childrenIcon), children));
             };
             SideMenu.prototype.onClick = function (id) {
                 this.traverseNodes(function (node, path) {
