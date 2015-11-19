@@ -1,8 +1,8 @@
-using Microsoft.AspNet.Mvc;
+using Microsoft.AspNet.Mvc.Filters;
 
 namespace Server.Common
 {
-  public class CorsEnabledAttribute : ActionFilterAttribute
+    public class CorsEnabledAttribute : ActionFilterAttribute
   {
     public override void OnActionExecuted(ActionExecutedContext context) 
     {

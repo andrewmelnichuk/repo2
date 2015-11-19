@@ -1,12 +1,9 @@
-using System;
 using Microsoft.AspNet.Builder;
-using Microsoft.Framework.DependencyInjection;
-using NLog;
-using NLog.Config;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HelloMvc
 {
-  public class Startup
+    public class Startup
   {
     public void ConfigureServices(IServiceCollection services)
     {
@@ -15,15 +12,13 @@ namespace HelloMvc
 
     public void Configure(IApplicationBuilder app)
     {
-      app.UseErrorPage();
-
       app.UseMvc(routes => {
         routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
       });
 
       app.UseWelcomePage();
 
-      LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");      
+      // LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");      
     }
   }
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Mvc;
 using FluentValidation;
-using NLog;
+// using NLog;
 using System;
 
 namespace Server.Common.Entities
@@ -12,20 +12,20 @@ namespace Server.Common.Entities
     where TEntity : Entity
     where TValidator : AbstractValidator<TEntity>, new()
   {
-    private static Logger logger = LogManager.GetLogger("EntityController");
+    // private static Logger logger = LogManager.GetLogger("EntityController");
     private static TValidator Validator = new TValidator();
 
     [HttpGet("{id:int}")]
     public TEntity Get(int id)
     {
-      logger.Info("get entity #{0}", id);
+      // logger.Info("get entity #{0}", id);
       return EntityRepository<TEntity>.GetById(id); 
     }
 
     [HttpGet]
     public List<TEntity> GetAll([FromQuery] int rev)
     {
-      logger.Info("get all entities");
+      // logger.Info("get all entities");
       return EntityRepository<TEntity>.GetAll(rev);
     }
 
@@ -47,7 +47,7 @@ namespace Server.Common.Entities
           Updates = (rev != null) ? EntityRepository<TEntity>.GetAll(rev.Value) : null };
       }
       catch (Exception ex) {
-        logger.Error(ex);
+        // logger.Error(ex);
         throw;
       }
     }
