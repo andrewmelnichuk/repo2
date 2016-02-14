@@ -2,7 +2,8 @@
   "version": "1.0.0-*",
   "webroot": "wwwroot",
   "exclude": [
-    "wwwroot"
+    "wwwroot",
+    "workDir"
   ],
   "dependencies": {
     "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
@@ -12,12 +13,14 @@
     "Microsoft.Framework.Logging.Console": "1.0.0-beta8",
     "Newtonsoft.Json": "7.0.1",
     "FluentValidation": "5.6.2.0",
-    "NLog.Config": "4.2.0"
+    "NLog.Config": "4.2.0",
+    "System.Net.Http": "4.0.1-beta-23516",
+    "ICSharpCode.SharpZipLib.dll": "0.85.4.369"
   },
   "commands": {
     "kestrel": "Microsoft.AspNet.Server.Kestrel --server.urls http://*:5004"
   },
   "frameworks": {
-    "dnxcore50": {}
+    "dnx451": {}
   }
 }

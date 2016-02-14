@@ -1,0 +1,21 @@
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Upload";
+}
+
+<div class="jumbotron">
+    <h1>Package uploading</h1>
+</div>
+<div class="row">
+    <form enctype="multipart/form-data" action="/api/packages" method="POST">
+      <label>Json</label>
+      <textarea name="json">
+        {"branch":"trunk""}
+      </textarea>
+      <br/>
+      <label>File</label>
+      <input type="file" name="package" />
+      <br/>
+      <input type="submit" value="Submit" >
+    </form>
+</div>
