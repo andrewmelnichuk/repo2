@@ -3,7 +3,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Net.Http.Headers;
 using Server.Common;
-using Server.Modules.Packages;
+using Server.Modules.Branches;
 
 namespace Server.Api.Uploads
 {
@@ -28,7 +28,7 @@ namespace Server.Api.Uploads
       var branchPath = AppPaths.Uploads + "/" + packageInfo.Name;
       await package.SaveAsAsync(branchPath + ".tmp");
       System.IO.File.Move($"{branchPath}.tmp", $"{branchPath}.zip");
-      PackageManager.PackageUploaded();
+      BranchManager.PackageUploaded();
     }
   }
 }
