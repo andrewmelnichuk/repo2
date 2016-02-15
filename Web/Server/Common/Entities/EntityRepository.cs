@@ -13,7 +13,7 @@ namespace Server.Common.Entities
     private static long NextRevision;
     private static Dictionary<int, T> Storage;
     private static ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-    private static string FilePath = string.Format("./Data/{0}.json", typeof(T).Name);
+    private static string FilePath = $"{AppPaths.Data}/{typeof(T).Name}.json";
 
     static EntityRepository()
     {
@@ -131,25 +131,17 @@ namespace Server.Common.Entities
 
     public static int Update(T entity)
     {
-      T copy = null;
-
       Lock.EnterWriteLock();
       try {
         if (!Storage.ContainsKey(entity.Id))
           Exceptions.EntityNotFound(entity.Id, typeof(T));
         if (Storage[entity.Id].IsDeleted)
-          throw Exceptions.EntityDeleted(entity.Id, typeof(T));
+          Exceptions.EntityDeleted(entity.Id, typeof(T));
 
-        copy = (T) Storage[entity.Id].Clone(); 
         Storage[entity.Id] = entity;
         Storage[entity.Id].Revision = NextRevision++;
         WriteStorage();
         return entity.Id;
-      }
-      catch {
-        if (copy != null)
-          Storage[copy.Id] = copy;
-        throw;
       }
       finally {
         Lock.ExitWriteLock();
@@ -158,28 +150,17 @@ namespace Server.Common.Entities
 
     public static void Delete(int id)
     {
-      T copy = null;
-
       Lock.EnterWriteLock();
       try {
-        if (Storage.ContainsKey(id)) {
-          var entity = Storage[id];
-          if (!entity.IsDeleted) {
-            copy = (T) entity.Clone(); 
-            entity.IsDeleted = true;
-            entity.Revision = NextRevision++;
-            WriteStorage();
-          }
+        if (!Storage.ContainsKey(id))
+          Exceptions.EntityNotFound(id, typeof(T));
+
+        var entity = Storage[id];
+        if (!entity.IsDeleted) {
+          entity.IsDeleted = true;
+          entity.Revision = NextRevision++;
+          WriteStorage();
         }
-        else
-        {
-          throw Exceptions.EntityNotFound(id, typeof(T));
-        }
-      }
-      catch {
-        if (copy != null)
-          Storage[copy.Id] = copy;
-        throw;
       }
       finally {
         Lock.ExitWriteLock();

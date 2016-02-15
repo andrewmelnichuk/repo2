@@ -9,13 +9,15 @@ namespace Server.Common
     public static string Work;
     public static string Uploads;
     public static string Branches;
+    public static string Data;
 
     static AppPaths()
     {
-      Root = Environment.CurrentDirectory;
+      Root = new DirectoryInfo(Environment.CurrentDirectory).Parent.FullName;
       Work = Path.Combine(Root, "WorkDir");
       Uploads = Path.Combine(Work, "Uploads");
       Branches = Path.Combine(Work, "Branches");
+      Data = Path.Combine(Work, "Data");
 
       if (!Directory.Exists(Work))
         Directory.CreateDirectory(Work);
@@ -25,6 +27,9 @@ namespace Server.Common
 
       if (!Directory.Exists(Branches))
         Directory.CreateDirectory(Branches);
+
+      if (!Directory.Exists(Data))
+        Directory.CreateDirectory(Data);
     }
   }
 }

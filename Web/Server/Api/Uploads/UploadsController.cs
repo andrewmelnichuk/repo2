@@ -1,4 +1,9 @@
+using System.Threading.Tasks;
+using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Mvc;
+using Microsoft.Net.Http.Headers;
+using Server.Common;
+using Server.Modules.Packages;
 
 namespace Server.Api.Uploads
 {
@@ -9,6 +14,21 @@ namespace Server.Api.Uploads
     public IActionResult Index()
     {
       return View();
+    }
+    
+    [HttpPost("")]
+    public async Task Upload(IFormFile package)
+    {
+      if (package == null || package.Length == 0)
+        Exceptions.ServerError("Invalid package file");
+
+      var fileName = ContentDispositionHeaderValue.Parse(package.ContentDisposition).FileName.Trim('"');
+      var packageInfo = new PackageInfo(fileName);
+
+      var branchPath = AppPaths.Uploads + "/" + packageInfo.Name;
+      await package.SaveAsAsync(branchPath + ".tmp");
+      System.IO.File.Move($"{branchPath}.tmp", $"{branchPath}.zip");
+      PackageManager.PackageUploaded();
     }
   }
 }
