@@ -29,8 +29,7 @@ namespace Server.Common.Entities
         T entity;
         if (Storage.TryGetValue(id, out entity))
           return (T) entity.Clone();
-        else
-          throw Exceptions.EntityNotFound(id, typeof(T));
+        throw Exceptions.EntityNotFound(id, typeof(T));
       }
       finally {
         Lock.ExitReadLock();
@@ -137,10 +136,10 @@ namespace Server.Common.Entities
       Lock.EnterWriteLock();
       try {
         if (!Storage.ContainsKey(entity.Id))
-          throw Exceptions.EntityNotFound(entity.Id, typeof(T));
+          Exceptions.EntityNotFound(entity.Id, typeof(T));
         if (Storage[entity.Id].IsDeleted)
           throw Exceptions.EntityDeleted(entity.Id, typeof(T));
-          
+
         copy = (T) Storage[entity.Id].Clone(); 
         Storage[entity.Id] = entity;
         Storage[entity.Id].Revision = NextRevision++;

@@ -1,3 +1,4 @@
+using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Filters;
 using NLog;
 
@@ -10,6 +11,10 @@ namespace Server.Common
     public override void OnException(ExceptionContext context)
     {
       log.Error(context.Exception);
+
+      if (context.Exception is ServerException)
+        context.Result = new JsonResult(new {success = false, message = context.Exception.Message});
+
       base.OnException(context);
     }
   }

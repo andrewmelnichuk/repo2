@@ -79,15 +79,23 @@ namespace Server.Api.Uploads
     [HttpPost]
     public async Task Upload(IFormFile package)
     {
-      if (package != null && package.Length != 0)
-      {
-        var fileName = DateTime.UtcNow.Ticks.ToString();
-        var filePath = AppPaths.Uploads + "/" + fileName;
-        await package.SaveAsAsync(filePath + ".tmp");
-        System.IO.File.Move($"{filePath}.tmp", $"{filePath}.zip");
-        _event.Set();
-        log.Info($"Uploaded package {fileName}.zip");
-      }
+      if (package == null || package.Length == 0)
+        Exceptions.ServerError("Invalid package file");
+
+      var fileName = ContentDispositionHeaderValue.Parse(package.ContentDisposition).FileName.Trim('"');
+      var tokens = fileName.Split(new[] {"#"}, StringSplitOptions.RemoveEmptyEntries);
+      if (tokens.Length < 2)
+        Exceptions.ServerError("Invalid package name.");
+
+      long buildNum;
+      if (!Int64.TryParse(tokens[1], out buildNum))
+        Exceptions.ServerError("Invalid package build number.");
+      
+      var filePath = AppPaths.Uploads + "/" + Path.GetFileNameWithoutExtension(fileName);
+      await package.SaveAsAsync(filePath + ".tmp");
+      System.IO.File.Move($"{filePath}.tmp", $"{filePath}.zip");
+      _event.Set();
+      log.Info($"Uploaded package {fileName}.zip");
     }
   }
 }

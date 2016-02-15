@@ -29,7 +29,7 @@ module Client.Views {
             <SideMenu onClick={this.onClick.bind(this)}/>
           </Navigation>
           <Content>
-            {this.state.activeItem}
+            {this.contentViews[this.state.activeItem]}
           </Content>
         </div>
       );

@@ -18,7 +18,7 @@ var Config = (function () {
         configurable: true
     });
     return Config;
-})();
+}());
 function model(eventsChannel) {
     return function (target) {
         target["eventsChannel"] = eventsChannel;
@@ -52,7 +52,7 @@ var Url = (function () {
             : Config.apiUrl + path;
     };
     return Url;
-})();
+}());
 var Utils = (function () {
     function Utils() {
     }
@@ -67,22 +67,23 @@ var Utils = (function () {
         return result;
     };
     return Utils;
-})();
+}());
 var Client;
 (function (Client) {
     var Common;
     (function (Common) {
         var Dictionary = (function () {
-            function Dictionary(init) {
+            function Dictionary() {
                 this._keys = [];
                 this._values = [];
-                if (!init)
-                    return;
-                for (var key in init) {
-                    if (init.hasOwnProperty(key))
-                        this.add(key, init[key]);
-                }
             }
+            // constructor(init?: {key: TKey, value: TValue}) {
+            //   if (!init) return;
+            //   for (var prop in init) {
+            //     if (init.hasOwnProperty(prop))
+            //       this.add(prop, init[prop]);
+            //   }
+            // }
             Dictionary.prototype.get = function (key) {
                 return this[key.toString()];
             };
@@ -108,7 +109,7 @@ var Client;
                 return this[key.toString()];
             };
             return Dictionary;
-        })();
+        }());
         Common.Dictionary = Dictionary;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
@@ -155,8 +156,8 @@ var Client;
                     console.log("EventManager: invalid event '" + event + "'");
                     return;
                 }
-                for (var _a = 0; _a < handlers.length; _a++) {
-                    var handler = handlers[_a];
+                for (var _a = 0, handlers_1 = handlers; _a < handlers_1.length; _a++) {
+                    var handler = handlers_1[_a];
                     (_b = handler.callback).call.apply(_b, [handler.scope].concat(args));
                 }
                 console.log("EventManager: " + channel + " -> " + event + ", " + handlers.length + " handler(s) called");
@@ -164,7 +165,7 @@ var Client;
             };
             EventManager._handlers = new Dictionary();
             return EventManager;
-        })();
+        }());
         Events.EventManager = EventManager;
     })(Events = Client.Events || (Client.Events = {}));
 })(Client || (Client = {}));
@@ -176,7 +177,7 @@ var Client;
             function Entity() {
             }
             return Entity;
-        })();
+        }());
         Models.Entity = Entity;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
@@ -187,12 +188,10 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var Client;
 (function (Client) {
@@ -214,18 +213,18 @@ var Client;
             };
             __decorate([
                 property
-            ], App.prototype, "name");
+            ], App.prototype, "name", void 0);
             __decorate([
                 property
-            ], App.prototype, "code");
+            ], App.prototype, "code", void 0);
             __decorate([
                 property
-            ], App.prototype, "internalId");
+            ], App.prototype, "internalId", void 0);
             App = __decorate([
                 model("models.App")
             ], App);
             return App;
-        })(Models.Entity);
+        }(Models.Entity));
         Models.App = App;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
@@ -251,21 +250,21 @@ var Client;
             };
             __decorate([
                 property
-            ], User.prototype, "login");
+            ], User.prototype, "login", void 0);
             __decorate([
                 property
-            ], User.prototype, "password");
+            ], User.prototype, "password", void 0);
             __decorate([
                 property
-            ], User.prototype, "firstName");
+            ], User.prototype, "firstName", void 0);
             __decorate([
                 property
-            ], User.prototype, "lastName");
+            ], User.prototype, "lastName", void 0);
             User = __decorate([
                 model("models.User")
             ], User);
             return User;
-        })(Models.Entity);
+        }(Models.Entity));
         Models.User = User;
     })(Models = Client.Models || (Client.Models = {}));
 })(Client || (Client = {}));
@@ -295,10 +294,10 @@ var Client;
                 $(node).jstree("destroy");
             };
             ExplorerView.prototype.render = function () {
-                return (React.createElement("div", {"ref": "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
+                return (React.createElement("div", {ref: "jstree"}, React.createElement("ul", null, React.createElement("li", null, "Production", React.createElement("ul", null, React.createElement("li", null, "Total Domination", React.createElement("ul", null, React.createElement("li", null, "Manage"), React.createElement("li", null, "Configs"), React.createElement("li", null, "Logs"), React.createElement("li", null, "Perfs"), React.createElement("li", null, "Servers"))), React.createElement("li", null, "Sparta"), React.createElement("li", null, "Pirates"), React.createElement("li", null, "Elves"), React.createElement("li", null, "Nords"))), React.createElement("li", null, "Supertest", React.createElement("ul", null, React.createElement("li", null, "Total Domination"))))));
             };
             return ExplorerView;
-        })(React.Component);
+        }(React.Component));
         Views.ExplorerView = ExplorerView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -415,14 +414,15 @@ var Client;
                     throw new Error("Repository was not initialized");
             };
             return EntityRepository;
-        })();
+        }());
         Common.EntityRepository = EntityRepository;
         var Model = (function () {
             function Model() {
             }
             Model.update = function (changes) {
                 var entities;
-                for (var e in changes) {
+                for (var _i = 0, changes_1 = changes; _i < changes_1.length; _i++) {
+                    var e = changes_1[_i];
                     if (e instanceof User)
                         entities = this.users;
                     else if (e instanceof App)
@@ -435,11 +435,13 @@ var Client;
             };
             Model.applyUpdate = function (entity, entities) {
                 var existing;
-                for (var e in entities)
+                for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
+                    var e = entities_1[_i];
                     if (e.id == entity.id) {
                         existing = e;
                         break;
                     }
+                }
                 if (!existing)
                     entities.push(entity); // add
                 else
@@ -448,7 +450,7 @@ var Client;
             Model.users = [];
             Model.apps = [];
             return Model;
-        })();
+        }());
         Common.Model = Model;
         var Data = (function () {
             function Data() {
@@ -456,7 +458,7 @@ var Client;
             Data.users = new EntityRepository("/users", User.fromJson);
             Data.apps = new EntityRepository("/apps", App.fromJson);
             return Data;
-        })();
+        }());
         Common.Data = Data;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
@@ -516,7 +518,7 @@ var Client;
                 // TODO add response callback
             };
             return HttpClient;
-        })();
+        }());
         Common.HttpClient = HttpClient;
     })(Common = Client.Common || (Client.Common = {}));
 })(Client || (Client = {}));
@@ -525,7 +527,7 @@ var DemoProps = (function () {
     function DemoProps() {
     }
     return DemoProps;
-})();
+}());
 var UserName = (function (_super) {
     __extends(UserName, _super);
     function UserName() {
@@ -535,12 +537,12 @@ var UserName = (function (_super) {
         return (React.createElement("div", null, this.props.name));
     };
     return UserName;
-})(React.Component);
+}(React.Component));
 var LikeButtonState = (function () {
     function LikeButtonState() {
     }
     return LikeButtonState;
-})();
+}());
 var LikeButton = (function (_super) {
     __extends(LikeButton, _super);
     function LikeButton() {
@@ -573,10 +575,10 @@ var LikeButton = (function (_super) {
     LikeButton.prototype.render = function () {
         console.log("render");
         var txt = this.state.liked.value ? "Liked" : "Not Liked";
-        return (React.createElement("button", {"ref": "btn", "onClick": this.buttonClick.bind(this)}, txt));
+        return (React.createElement("button", {ref: "btn", onClick: this.buttonClick.bind(this)}, txt));
     };
     return LikeButton;
-})(React.Component);
+}(React.Component));
 ///<reference path="../_references.ts" />
 var Client;
 (function (Client) {
@@ -588,10 +590,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             Brand.prototype.render = function () {
-                return (React.createElement("div", {"className": "navbar-header"}, React.createElement("button", {"type": "button", "className": "navbar-toggle", "data-toggle": "collapse", "data-target": ".navbar-collapse"}, React.createElement("span", {"className": "sr-only"}, "Toggle navigation"), React.createElement("span", {"className": "icon-bar"}), React.createElement("span", {"className": "icon-bar"}), React.createElement("span", {"className": "icon-bar"})), React.createElement("a", {"className": "navbar-brand", "href": "index.html"}, "SB Admin v2.0")));
+                return (React.createElement("div", {className: "navbar-header"}, React.createElement("button", {type: "button", className: "navbar-toggle", "data-toggle": "collapse", "data-target": ".navbar-collapse"}, React.createElement("span", {className: "sr-only"}, "Toggle navigation"), React.createElement("span", {className: "icon-bar"}), React.createElement("span", {className: "icon-bar"}), React.createElement("span", {className: "icon-bar"})), React.createElement("a", {className: "navbar-brand", href: "index.html"}, "SB Admin v2.0")));
             };
             return Brand;
-        })(React.Component);
+        }(React.Component));
         Views.Brand = Brand;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -617,7 +619,7 @@ var Client;
                 window.removeEventListener("resize", this.updateHeight);
             };
             Content.prototype.render = function () {
-                return (React.createElement("div", {"id": "page-wrapper"}, this.props["children"]));
+                return (React.createElement("div", {id: "page-wrapper"}, this.props["children"]));
             };
             Content.prototype.updateHeight = function () {
                 var topOffset = 50;
@@ -638,7 +640,7 @@ var Client;
                 }
             };
             return Content;
-        })(React.Component);
+        }(React.Component));
         Views.Content = Content;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -662,10 +664,10 @@ var Client;
                     this.setState({ activeItem: item });
             };
             Index.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement(Views.Navigation, null, React.createElement(Views.Brand, null), React.createElement(Views.TopMenu, null), React.createElement(Views.SideMenu, {"onClick": this.onClick.bind(this)})), React.createElement(Views.Content, null, this.state.activeItem)));
+                return (React.createElement("div", null, React.createElement(Views.Navigation, null, React.createElement(Views.Brand, null), React.createElement(Views.TopMenu, null), React.createElement(Views.SideMenu, {onClick: this.onClick.bind(this)})), React.createElement(Views.Content, null, this.contentViews[this.state.activeItem])));
             };
             return Index;
-        })(React.Component);
+        }(React.Component));
         Views.Index = Index;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -711,7 +713,7 @@ var Client;
             }
             MainMenu.prototype.render = function () {
                 var _this = this;
-                return (React.createElement("ul", {"className": "nav main-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); })));
+                return (React.createElement("ul", {className: "nav main-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); })));
             };
             MainMenu.prototype.renderNode = function (node) {
                 var _this = this;
@@ -726,9 +728,9 @@ var Client;
                     "fa-angle-right": !node.icon
                 });
                 var children = hasChildren
-                    ? React.createElement("ul", {"className": "dropdown-menu", "style": node.expanded ? { display: "block" } : null}, node.children.map(function (n) { return _this.renderNode(n); }))
+                    ? React.createElement("ul", {className: "dropdown-menu", style: node.expanded ? { display: "block" } : null}, node.children.map(function (n) { return _this.renderNode(n); }))
                     : null;
-                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "className": aClasses, "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": iconClasses}), React.createElement("span", {"className": "hidden-xs"}, node.name)), children));
+                return (React.createElement("li", {key: node.id, className: liClasses}, React.createElement("a", {href: "#", className: aClasses, onClick: this.onClick.bind(this, node.id)}, React.createElement("i", {className: iconClasses}), React.createElement("span", {className: "hidden-xs"}, node.name)), children));
             };
             MainMenu.prototype.onClick = function (id) {
                 this.traverseNodes(function (node, path) {
@@ -765,7 +767,7 @@ var Client;
                 return { model: $.extend(true, {}, this._nodes) }; // clone model
             };
             return MainMenu;
-        })(React.Component);
+        }(React.Component));
         Views.MainMenu = MainMenu;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -782,10 +784,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             ManageView.prototype.render = function () {
-                return (React.createElement("div", null, React.createElement("div", {"className": "preloader"}, React.createElement("img", {"src": "img/devoops_getdata.gif", "className": "devoops-getdata", "alt": "preloader"})), React.createElement("div", {"id": "ajax-content"}, "This is Manage Apps view")));
+                return (React.createElement("div", null, React.createElement("div", {className: "preloader"}, React.createElement("img", {src: "img/devoops_getdata.gif", className: "devoops-getdata", alt: "preloader"})), React.createElement("div", {id: "ajax-content"}, "This is Manage Apps view")));
             };
             return ManageView;
-        })(React.Component);
+        }(React.Component));
         Views.ManageView = ManageView;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -800,10 +802,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             ModalBox.prototype.render = function () {
-                return (React.createElement("div", {"id": "modalbox"}, React.createElement("div", {"className": "devoops-modal"}, React.createElement("div", {"className": "devoops-modal-header"}, React.createElement("div", {"className": "modal-header-name"}, React.createElement("span", null, "Basic table")), React.createElement("div", {"className": "box-icons"}, React.createElement("a", {"className": "close-link"}, React.createElement("i", {"className": "fa fa-times"})))), React.createElement("div", {"className": "devoops-modal-inner"}), React.createElement("div", {"className": "devoops-modal-bottom"}))));
+                return (React.createElement("div", {id: "modalbox"}, React.createElement("div", {className: "devoops-modal"}, React.createElement("div", {className: "devoops-modal-header"}, React.createElement("div", {className: "modal-header-name"}, React.createElement("span", null, "Basic table")), React.createElement("div", {className: "box-icons"}, React.createElement("a", {className: "close-link"}, React.createElement("i", {className: "fa fa-times"})))), React.createElement("div", {className: "devoops-modal-inner"}), React.createElement("div", {className: "devoops-modal-bottom"}))));
             };
             return ModalBox;
-        })(React.Component);
+        }(React.Component));
         Views.ModalBox = ModalBox;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -818,10 +820,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             Navigation.prototype.render = function () {
-                return (React.createElement("nav", {"className": "navbar navbar-default navbar-static-top", "role": "navigation", "style": { marginBottom: 0 }}, this.props["children"]));
+                return (React.createElement("nav", {className: "navbar navbar-default navbar-static-top", role: "navigation", style: { marginBottom: 0 }}, this.props["children"]));
             };
             return Navigation;
-        })(React.Component);
+        }(React.Component));
         Views.Navigation = Navigation;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -836,10 +838,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             ScreenSaver.prototype.render = function () {
-                return (React.createElement("div", {"id": "screensaver"}, React.createElement("canvas", {"id": "canvas"}), React.createElement("i", {"className": "fa fa-lock", "id": "screen_unlock"})));
+                return (React.createElement("div", {id: "screensaver"}, React.createElement("canvas", {id: "canvas"}), React.createElement("i", {className: "fa fa-lock", id: "screen_unlock"})));
             };
             return ScreenSaver;
-        })(React.Component);
+        }(React.Component));
         Views.ScreenSaver = ScreenSaver;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -873,7 +875,7 @@ var Client;
             };
             SideMenu.prototype.render = function () {
                 var _this = this;
-                return (React.createElement("div", {"className": "navbar-default sidebar", "role": "navigation"}, React.createElement("div", {"className": "sidebar-nav navbar-collapse"}, React.createElement("ul", {"className": "nav", "id": "side-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); }), ";"))));
+                return (React.createElement("div", {className: "navbar-default sidebar", role: "navigation"}, React.createElement("div", {className: "sidebar-nav navbar-collapse"}, React.createElement("ul", {className: "nav", id: "side-menu"}, this._nodes.map(function (node) { return _this.renderNode(node); }), ";"))));
             };
             SideMenu.prototype.renderNode = function (node) {
                 var _this = this;
@@ -882,12 +884,12 @@ var Client;
                 var ulClasses = window.classNames("nav", "nav-second-level", "collapse", { "in": node.expanded });
                 var hasChildren = (node.children && node.children.length > 0);
                 var children = hasChildren
-                    ? React.createElement("ul", {"className": ulClasses}, node.children.map(function (n) { return _this.renderNode(n); }))
+                    ? React.createElement("ul", {className: ulClasses}, node.children.map(function (n) { return _this.renderNode(n); }))
                     : null;
                 var childrenIcon = hasChildren
-                    ? React.createElement("span", {"className": "fa arrow"})
+                    ? React.createElement("span", {className: "fa arrow"})
                     : null;
-                return (React.createElement("li", {"key": node.id, "className": liClasses}, React.createElement("a", {"href": "#", "onClick": this.onClick.bind(this, node.id)}, React.createElement("i", {"className": iconClasses}), " ", node.name, " ", childrenIcon), children));
+                return (React.createElement("li", {key: node.id, className: liClasses}, React.createElement("a", {href: "#", onClick: this.onClick.bind(this, node.id)}, React.createElement("i", {className: iconClasses}), " ", node.name, " ", childrenIcon), children));
             };
             SideMenu.prototype.onClick = function (id) {
                 this.traverseNodes(function (node, path) {
@@ -924,7 +926,7 @@ var Client;
                 return { model: $.extend(true, {}, this._nodes) }; // clone model
             };
             return SideMenu;
-        })(React.Component);
+        }(React.Component));
         Views.SideMenu = SideMenu;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));
@@ -939,10 +941,10 @@ var Client;
                 _super.apply(this, arguments);
             }
             TopMenu.prototype.render = function () {
-                return (React.createElement("ul", {"className": "nav navbar-top-links navbar-right"}, React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"className": "dropdown-toggle", "data-toggle": "dropdown", "href": "#"}, React.createElement("i", {"className": "fa fa-envelope fa-fw"}), "  ", React.createElement("i", {"className": "fa fa-caret-down"})), React.createElement("ul", {"className": "dropdown-menu dropdown-messages"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {"className": "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {"className": "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {"className": "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"className": "text-center", "href": "#"}, React.createElement("strong", null, "Read All Messages"), React.createElement("i", {"className": "fa fa-angle-right"}))))), React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"className": "dropdown-toggle", "data-toggle": "dropdown", "href": "#"}, React.createElement("i", {"className": "fa fa-tasks fa-fw"}), "  ", React.createElement("i", {"className": "fa fa-caret-down"})), React.createElement("ul", {"className": "dropdown-menu dropdown-tasks"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 1"), React.createElement("span", {"className": "pull-right text-muted"}, "40% Complete")), React.createElement("div", {"className": "progress progress-striped active"}, React.createElement("div", {"className": "progress-bar progress-bar-success", "role": "progressbar", "aria-valuenow": "40", "aria-valuemin": "0", "aria-valuemax": "100", "style": { width: "40%" }}, React.createElement("span", {"className": "sr-only"}, "40% Complete (success)")))))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 2"), React.createElement("span", {"className": "pull-right text-muted"}, "20% Complete")), React.createElement("div", {"className": "progress progress-striped active"}, React.createElement("div", {"className": "progress-bar progress-bar-info", "role": "progressbar", "aria-valuenow": "20", "aria-valuemin": "0", "aria-valuemax": "100", "style": { width: "40%" }}, React.createElement("span", {"className": "sr-only"}, "20% Complete")))))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 3"), React.createElement("span", {"className": "pull-right text-muted"}, "60% Complete")), React.createElement("div", {"className": "progress progress-striped active"}, React.createElement("div", {"className": "progress-bar progress-bar-warning", "role": "progressbar", "aria-valuenow": "60", "aria-valuemin": "0", "aria-valuemax": "100", "style": { width: "60%" }}, React.createElement("span", {"className": "sr-only"}, "60% Complete (warning)")))))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 4"), React.createElement("span", {"className": "pull-right text-muted"}, "80% Complete")), React.createElement("div", {"className": "progress progress-striped active"}, React.createElement("div", {"className": "progress-bar progress-bar-danger", "role": "progressbar", "aria-valuenow": "80", "aria-valuemin": "0", "aria-valuemax": "100", "style": { width: "40%" }}, React.createElement("span", {"className": "sr-only"}, "80% Complete (danger)")))))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"className": "text-center", "href": "#"}, React.createElement("strong", null, "See All Tasks"), React.createElement("i", {"className": "fa fa-angle-right"}))))), React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"className": "dropdown-toggle", "data-toggle": "dropdown", "href": "#"}, React.createElement("i", {"className": "fa fa-bell fa-fw"}), "  ", React.createElement("i", {"className": "fa fa-caret-down"})), React.createElement("ul", {"className": "dropdown-menu dropdown-alerts"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("i", {"className": "fa fa-comment fa-fw"}), " New Comment", React.createElement("span", {"className": "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("i", {"className": "fa fa-twitter fa-fw"}), " 3 New Followers", React.createElement("span", {"className": "pull-right text-muted small"}, "12 minutes ago")))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("i", {"className": "fa fa-envelope fa-fw"}), " Message Sent", React.createElement("span", {"className": "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("i", {"className": "fa fa-tasks fa-fw"}), " New Task", React.createElement("span", {"className": "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("div", null, React.createElement("i", {"className": "fa fa-upload fa-fw"}), " Server Rebooted", React.createElement("span", {"className": "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"className": "text-center", "href": "#"}, React.createElement("strong", null, "See All Alerts"), React.createElement("i", {"className": "fa fa-angle-right"}))))), React.createElement("li", {"className": "dropdown"}, React.createElement("a", {"className": "dropdown-toggle", "data-toggle": "dropdown", "href": "#"}, React.createElement("i", {"className": "fa fa-user fa-fw"}), "  ", React.createElement("i", {"className": "fa fa-caret-down"})), React.createElement("ul", {"className": "dropdown-menu dropdown-user"}, React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-user fa-fw"}), " User Profile")), React.createElement("li", null, React.createElement("a", {"href": "#"}, React.createElement("i", {"className": "fa fa-gear fa-fw"}), " Settings")), React.createElement("li", {"className": "divider"}), React.createElement("li", null, React.createElement("a", {"href": "login.html"}, React.createElement("i", {"className": "fa fa-sign-out fa-fw"}), " Logout"))))));
+                return (React.createElement("ul", {className: "nav navbar-top-links navbar-right"}, React.createElement("li", {className: "dropdown"}, React.createElement("a", {className: "dropdown-toggle", "data-toggle": "dropdown", href: "#"}, React.createElement("i", {className: "fa fa-envelope fa-fw"}), "  ", React.createElement("i", {className: "fa fa-caret-down"})), React.createElement("ul", {className: "dropdown-menu dropdown-messages"}, React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {className: "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {className: "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("strong", null, "John Smith"), React.createElement("span", {className: "pull-right text-muted"}, React.createElement("em", null, "Yesterday"))), React.createElement("div", null, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eleifend..."))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {className: "text-center", href: "#"}, React.createElement("strong", null, "Read All Messages"), React.createElement("i", {className: "fa fa-angle-right"}))))), React.createElement("li", {className: "dropdown"}, React.createElement("a", {className: "dropdown-toggle", "data-toggle": "dropdown", href: "#"}, React.createElement("i", {className: "fa fa-tasks fa-fw"}), "  ", React.createElement("i", {className: "fa fa-caret-down"})), React.createElement("ul", {className: "dropdown-menu dropdown-tasks"}, React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 1"), React.createElement("span", {className: "pull-right text-muted"}, "40% Complete")), React.createElement("div", {className: "progress progress-striped active"}, React.createElement("div", {className: "progress-bar progress-bar-success", role: "progressbar", "aria-valuenow": "40", "aria-valuemin": "0", "aria-valuemax": "100", style: { width: "40%" }}, React.createElement("span", {className: "sr-only"}, "40% Complete (success)")))))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 2"), React.createElement("span", {className: "pull-right text-muted"}, "20% Complete")), React.createElement("div", {className: "progress progress-striped active"}, React.createElement("div", {className: "progress-bar progress-bar-info", role: "progressbar", "aria-valuenow": "20", "aria-valuemin": "0", "aria-valuemax": "100", style: { width: "40%" }}, React.createElement("span", {className: "sr-only"}, "20% Complete")))))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 3"), React.createElement("span", {className: "pull-right text-muted"}, "60% Complete")), React.createElement("div", {className: "progress progress-striped active"}, React.createElement("div", {className: "progress-bar progress-bar-warning", role: "progressbar", "aria-valuenow": "60", "aria-valuemin": "0", "aria-valuemax": "100", style: { width: "60%" }}, React.createElement("span", {className: "sr-only"}, "60% Complete (warning)")))))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("p", null, React.createElement("strong", null, "Task 4"), React.createElement("span", {className: "pull-right text-muted"}, "80% Complete")), React.createElement("div", {className: "progress progress-striped active"}, React.createElement("div", {className: "progress-bar progress-bar-danger", role: "progressbar", "aria-valuenow": "80", "aria-valuemin": "0", "aria-valuemax": "100", style: { width: "40%" }}, React.createElement("span", {className: "sr-only"}, "80% Complete (danger)")))))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {className: "text-center", href: "#"}, React.createElement("strong", null, "See All Tasks"), React.createElement("i", {className: "fa fa-angle-right"}))))), React.createElement("li", {className: "dropdown"}, React.createElement("a", {className: "dropdown-toggle", "data-toggle": "dropdown", href: "#"}, React.createElement("i", {className: "fa fa-bell fa-fw"}), "  ", React.createElement("i", {className: "fa fa-caret-down"})), React.createElement("ul", {className: "dropdown-menu dropdown-alerts"}, React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("i", {className: "fa fa-comment fa-fw"}), " New Comment", React.createElement("span", {className: "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("i", {className: "fa fa-twitter fa-fw"}), " 3 New Followers", React.createElement("span", {className: "pull-right text-muted small"}, "12 minutes ago")))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("i", {className: "fa fa-envelope fa-fw"}), " Message Sent", React.createElement("span", {className: "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("i", {className: "fa fa-tasks fa-fw"}), " New Task", React.createElement("span", {className: "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("div", null, React.createElement("i", {className: "fa fa-upload fa-fw"}), " Server Rebooted", React.createElement("span", {className: "pull-right text-muted small"}, "4 minutes ago")))), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {className: "text-center", href: "#"}, React.createElement("strong", null, "See All Alerts"), React.createElement("i", {className: "fa fa-angle-right"}))))), React.createElement("li", {className: "dropdown"}, React.createElement("a", {className: "dropdown-toggle", "data-toggle": "dropdown", href: "#"}, React.createElement("i", {className: "fa fa-user fa-fw"}), "  ", React.createElement("i", {className: "fa fa-caret-down"})), React.createElement("ul", {className: "dropdown-menu dropdown-user"}, React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("i", {className: "fa fa-user fa-fw"}), " User Profile")), React.createElement("li", null, React.createElement("a", {href: "#"}, React.createElement("i", {className: "fa fa-gear fa-fw"}), " Settings")), React.createElement("li", {className: "divider"}), React.createElement("li", null, React.createElement("a", {href: "login.html"}, React.createElement("i", {className: "fa fa-sign-out fa-fw"}), " Logout"))))));
             };
             return TopMenu;
-        })(React.Component);
+        }(React.Component));
         Views.TopMenu = TopMenu;
     })(Views = Client.Views || (Client.Views = {}));
 })(Client || (Client = {}));

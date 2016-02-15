@@ -1,10 +1,8 @@
-using System;
-
 namespace Server.Common.Entities
 {
-  public class EntityException: Exception
+  public class EntityException: ServerException
   {
-    public  EntityException(string message)
+    public EntityException(string message)
       :base(message)
     {}
   } 

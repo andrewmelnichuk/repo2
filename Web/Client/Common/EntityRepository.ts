@@ -120,7 +120,7 @@ module Client.Common {
     public static update(changes: Array<Entity>): void {
       var entities: Array<Entity>;
 
-      for (var e in changes) {
+      for (var e of changes) {
         if (e instanceof User)
           entities = this.users;
         else if (e instanceof App)
@@ -136,7 +136,7 @@ module Client.Common {
     private static applyUpdate(entity: Entity, entities: Array<Entity>) {
       var existing: Entity;
 
-      for (var e in entities)
+      for (var e of entities)
         if (e.id == entity.id) {
           existing = e;
           break;
