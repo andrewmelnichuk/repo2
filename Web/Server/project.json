@@ -3,7 +3,7 @@
   "webroot": "wwwroot",
   "exclude": [
     "wwwroot",
-    "WorkDir"
+    "WorkDir/**"
   ],
   "dependencies": {
     "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
