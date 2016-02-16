@@ -1,34 +1,64 @@
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using ICSharpCode.SharpZipLib.Zip;
 using NLog;
 using Server.Common;
+using Server.Common.Entities;
 
 namespace Server.Modules.Branches
 {
+  public class BranchRepository : EntityRepository<string, Branch>
+  {}
+  
   public class BranchManager
   {
     private static Logger log = LogManager.GetLogger("PackageManager");
 
-    private static Thread _thread = new Thread(ThreadProc);
-    private static ManualResetEvent _event = new ManualResetEvent(false);
+    private static Thread _uploadThread = new Thread(UploadhreadProc);
+    private static ManualResetEvent _uploadEvent = new ManualResetEvent(false);
+
+    private static Thread _branchesThread = new Thread(BranchesThreadProc);
+    private static BlockingCollection<string> _uploadedBranches = new BlockingCollection<string>();
 
     static BranchManager()
     {
-      _thread.Start();
+      Initialize();
+      _uploadThread.Start();
+      _branchesThread.Start();
+    }
+
+    private static void Initialize()
+    {
+      
+    }
+
+    private static void BranchesThreadProc()
+    {
+      while (true) {
+        var branchName = _uploadedBranches.Take();
+        var branchDir = Path.Combine(AppPaths.Branches, branchName);
+        if (Directory.Exists(branchDir)) {
+          var branch = new Branch{
+            Name = branchName,
+            Uploaded = Directory.GetLastWriteTimeUtc(branchDir)
+          };
+         	BranchRepository.AddOrUpdate(branch.Name, branch); 
+        }
+      }
     }
 
     public static void PackageUploaded()
     {
-      _event.Set();
+      _uploadEvent.Set();
     }
 
-    private static async void ThreadProc()
+    private static async void UploadhreadProc()
     {
       var uploadDir = new DirectoryInfo(AppPaths.Uploads);
-      
-      while (_event.WaitOne())
+
+      while (_uploadEvent.WaitOne())
       {
         var file = (
           from f in uploadDir.GetFiles("*.zip")
@@ -37,7 +67,7 @@ namespace Server.Modules.Branches
         ).FirstOrDefault();
 
         if (file == null) {
-          _event.Reset();
+          _uploadEvent.Reset();
           continue;
         }
 
@@ -58,6 +88,7 @@ namespace Server.Modules.Branches
           }
         }
         
+        _uploadedBranches.Add(packageInfo.Branch);
         System.IO.File.Delete(file.FullName);
         log.Info($"Delete package {file.Name}");
       }

@@ -7,40 +7,38 @@ using System;
 
 namespace Server.Common.Entities
 {
-  public class EntityRepository<T> where T : Entity
+  public class EntityRepository<TKey, TEntity> where TEntity : Entity
   {
-    private static int NextId;
     private static long NextRevision;
-    private static Dictionary<int, T> Storage;
+    private static Dictionary<TKey, TEntity> Storage;
     private static ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-    private static string FilePath = $"{AppPaths.Data}/{typeof(T).Name}.json";
+    private static string FilePath = $"{AppPaths.Data}/{typeof(TEntity).Name}.json";
 
     static EntityRepository()
     {
       ReadStorage();
-      NextId = Storage.Count > 0 ? Storage.Keys.Last() + 1 : 1;
       NextRevision = Storage.Count > 0 ? Storage.Values.Max(e => e.Revision) + 1 : 1;
     }
 
-    public static T GetById(int id)
+    public static TEntity GetByKey(TKey key)
     {
       Lock.EnterReadLock();
       try {
-        T entity;
-        if (Storage.TryGetValue(id, out entity))
-          return (T) entity.Clone();
-        throw Exceptions.EntityNotFound(id, typeof(T));
+        TEntity entity;
+        if (Storage.TryGetValue(key, out entity))
+          return (TEntity) entity.Clone();
+        throw Exceptions.EntityNotFound(key, typeof(TEntity));
       }
       finally {
         Lock.ExitReadLock();
       }
     }
 
-    public static bool TryGetById(int id, out T entity)
+    public static bool TryGetByKey(TKey key, out TEntity entity)
     {
       try
       {
-        entity = GetById(id);
+        entity = GetByKey(key);
         return true;
       }
       catch (EntityException)
@@ -50,14 +48,14 @@ namespace Server.Common.Entities
       }
     }
 
-    public static List<T> GetByIds(int[] ids)
+    public static List<TEntity> GetByKeys(TKey[] keys)
     {
       Lock.EnterReadLock();
       try {
         return Storage
-          .Where(kvp => ids.Contains(kvp.Key))
+          .Where(kvp => keys.Contains(kvp.Key))
           .Select(kvp => kvp.Value.Clone())
-          .Cast<T>()
+          .Cast<TEntity>()
           .ToList();
       }
       finally {
@@ -65,7 +63,7 @@ namespace Server.Common.Entities
       }
     }
 
-    public static List<T> GetAll(int revision)
+    public static List<TEntity> GetAll(int revision)
     {
       if (revision < 0)
         throw new ArgumentException("revision must be greater or equal zero");
@@ -75,7 +73,7 @@ namespace Server.Common.Entities
         return Storage.Values
           .Where(v => v.Revision > revision)
           .Select(v => v.Clone())
-          .Cast<T>()
+          .Cast<TEntity>()
           .ToList();
       }
       finally {
@@ -83,14 +81,14 @@ namespace Server.Common.Entities
       } 
     }
 
-    public List<Entity> GetChanged(long revision)
+    public List<TEntity> GetChanged(long revision)
     {
       Lock.EnterReadLock();
       try {
-        var result = new List<Entity>();
+        var result = new List<TEntity>();
         foreach (var kvp in Storage)
           if (kvp.Value.Revision > revision)
-            result.Add(kvp.Value.Clone());
+            result.Add((TEntity)kvp.Value.Clone());
         return result;
       }
       finally {
@@ -98,64 +96,95 @@ namespace Server.Common.Entities
       }
     }
 
-    public static bool Contains(int id)
+    public static bool Contains(TKey key)
     {
       Lock.EnterReadLock();
       try {
-        return Storage.ContainsKey(id);
+        return Storage.ContainsKey(key);
       }
       finally {
         Lock.ExitReadLock();
       }
     }
 
-    public static int Add(T entity)
+    public static void Add(TKey key, TEntity entity)
     {
       Lock.EnterWriteLock();
       try {
-        entity.Id = NextId++;
         entity.Revision = NextRevision++;
-        Storage.Add(entity.Id, entity);
+        Storage.Add(key, entity);
         WriteStorage();
-        return entity.Id;
-      }
-      catch {
-        if (Storage.ContainsKey(entity.Id))
-          Storage.Remove(entity.Id);
-        throw;
       }
       finally {
         Lock.ExitWriteLock();
       }
     }
 
-    public static int Update(T entity)
+    public static void Update(TKey key, TEntity entity)
     {
       Lock.EnterWriteLock();
       try {
-        if (!Storage.ContainsKey(entity.Id))
-          Exceptions.EntityNotFound(entity.Id, typeof(T));
-        if (Storage[entity.Id].IsDeleted)
-          Exceptions.EntityDeleted(entity.Id, typeof(T));
+        if (!Storage.ContainsKey(key))
+          Exceptions.EntityNotFound(key, typeof(TEntity));
+        if (Storage[key].IsDeleted)
+          Exceptions.EntityDeleted(key, typeof(TEntity));
 
-        Storage[entity.Id] = entity;
-        Storage[entity.Id].Revision = NextRevision++;
+        entity.Revision = NextRevision++;
+        Storage[key] = entity;
         WriteStorage();
-        return entity.Id;
       }
       finally {
         Lock.ExitWriteLock();
       }
     }
 
-    public static void Delete(int id)
+    public static void AddOrUpdate(TKey key, TEntity entity)
     {
       Lock.EnterWriteLock();
       try {
-        if (!Storage.ContainsKey(id))
-          Exceptions.EntityNotFound(id, typeof(T));
+        if (!Storage.ContainsKey(key) || !Storage[key].IsDeleted) {
+          entity.Revision = NextRevision++;
+          Storage[key] = entity;
+        }
+        else {
+          Exceptions.EntityDeleted(key, typeof(TEntity));
+        }
+        WriteStorage();
+      }
+      finally {
+        Lock.ExitWriteLock();
+      }
+    }
 
-        var entity = Storage[id];
+    public static void Update(TKey key, Action<TEntity> edit)
+    {
+      Lock.EnterWriteLock();
+      try {
+        if (!Storage.ContainsKey(key))
+          Exceptions.EntityNotFound(key, typeof(TEntity));
+        if (Storage[key].IsDeleted)
+          Exceptions.EntityDeleted(key, typeof(TEntity));
+
+        var entity = Storage[key];
+        if (edit != null)
+        {
+          edit(entity);
+          entity.Revision = NextRevision++;
+        }
+      }
+      finally {
+        Lock.ExitWriteLock();
+      }
+    }
+
+    public static void Delete(TKey key)
+    {
+      Lock.EnterWriteLock();
+      try {
+        if (!Storage.ContainsKey(key))
+          Exceptions.EntityNotFound(key, typeof(TEntity));
+
+        var entity = Storage[key];
         if (!entity.IsDeleted) {
           entity.IsDeleted = true;
           entity.Revision = NextRevision++;
@@ -172,7 +201,8 @@ namespace Server.Common.Entities
       using (var stream = File.Open(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
       using (var reader = new StreamReader(stream)) {
         var serializer = new JsonSerializer();
-        Storage = (Dictionary<int, T>) serializer.Deserialize(reader, typeof(Dictionary<int, T>)) ?? new Dictionary<int, T>(); 
+        Storage = (Dictionary<TKey, TEntity>) serializer.Deserialize(reader, typeof(Dictionary<TKey, TEntity>)) 
+          ?? new Dictionary<TKey, TEntity>(); 
       }
     }
 
