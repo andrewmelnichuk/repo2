@@ -53,7 +53,7 @@ namespace Server.Modules.Branches
     private static void ReadRevision()
     {
       foreach (var branchPath in Directory.GetDirectories(AppPaths.Branches))
-        _revision = Math.Max(_revision, ReadRevision(Path.Combine(branchPath, ".rev")));
+        _revision = Math.Max(_revision, ReadRevision(branchPath));
     }
 
     private static void ModelThreadProc()
