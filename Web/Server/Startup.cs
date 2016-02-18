@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Config;
 using Server.Common;
+using Server.Modules.Branches;
 
 namespace HelloMvc
 {
@@ -28,10 +29,11 @@ namespace HelloMvc
       // });
 
       app.UseWelcomePage();
-      
       app.UseDeveloperExceptionPage();
 
       LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");
+      
+      BranchManager.Initialize();
     }
   }
 }

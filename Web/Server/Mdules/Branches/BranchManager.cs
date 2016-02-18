@@ -6,14 +6,10 @@ using System.Threading;
 using ICSharpCode.SharpZipLib.Zip;
 using NLog;
 using Server.Common;
-using Server.Common.Entities;
 
 namespace Server.Modules.Branches
 {
-  public class BranchRepository : EntityRepository<string, Branch>
-  {}
-  
-  public class BranchManager
+    public class BranchManager
   {
     private static Logger log = LogManager.GetLogger("BranchManager");
 
@@ -34,10 +30,10 @@ namespace Server.Modules.Branches
       _modelThread.Start();
     }
 
-    private static void Initialize()
+    public static void Initialize()
     {
-      ReadModel();
-      ReadRevision();
+      // ReadModel();
+      // ReadRevision();
     }
 
     private static void ReadModel()
@@ -50,12 +46,6 @@ namespace Server.Modules.Branches
       }
     }
 
-    private static void ReadRevision()
-    {
-      foreach (var branchPath in Directory.GetDirectories(AppPaths.Branches))
-        _revision = Math.Max(_revision, ReadRevision(branchPath));
-    }
-
     private static void ModelThreadProc()
     {
       while (true) {
@@ -66,7 +56,6 @@ namespace Server.Modules.Branches
             Name = branchName,
             Uploaded = Directory.GetLastWriteTimeUtc(branchDir)
           };
-         	BranchRepository.AddOrUpdate(branch.Name, branch); 
         }
       }
     }
@@ -80,65 +69,67 @@ namespace Server.Modules.Branches
     {
       var uploadDir = new DirectoryInfo(AppPaths.Uploads);
 
-      while (_uploadEvent.WaitOne())
+      while (true)
       {
-        var file = (
+        _uploadEvent.WaitOne(5000);
+
+        var packageFile = (
           from f in uploadDir.GetFiles("*.zip")
           orderby System.IO.File.GetLastWriteTimeUtc(f.FullName)
           select f
         ).FirstOrDefault();
 
-        if (file == null) {
+        if (packageFile == null) {
           _uploadEvent.Reset();
           continue;
         }
 
-        var packageInfo = new PackageInfo(file.FullName);
-        log.Info($"Copy branch {packageInfo.Branch} from package {file.Name}");
+        var packageInfo = new PackageInfo(packageFile.FullName);
+        log.Info($"Unpack branch '{packageInfo.Branch}' from package '{packageFile.Name}'.");
 
-        using (var stream = System.IO.File.Open(file.FullName, FileMode.Open, FileAccess.Read))
+        using (var stream = System.IO.File.Open(packageFile.FullName, FileMode.Open, FileAccess.Read))
         using (var zipStream = new ZipInputStream(stream))
         {
           ZipEntry entry;
           while ((entry = zipStream.GetNextEntry()) != null)
           {
+            var entryPath = Path.Combine(AppPaths.Branches, entry.Name);
             if (entry.IsDirectory)
-              Directory.CreateDirectory(Path.Combine(AppPaths.Branches, entry.Name));
+              Directory.CreateDirectory(entryPath);
             else
-              using (var fileStream = System.IO.File.Create(Path.Combine(AppPaths.Branches, entry.Name)))
+              using (var fileStream = System.IO.File.Create(entryPath))
                 await zipStream.CopyToAsync(fileStream);
           }
         }
 
-        WriteRevision(packageInfo.Branch, ++_revision);
+        WriteRevision(Path.GetFileName(Path.Combine(AppPaths.Branches, packageInfo.Branch)), ++_revision);
+        System.IO.File.Delete(packageFile.FullName);
 
         _uploadedBranches.Add(packageInfo.Branch);
-        System.IO.File.Delete(file.FullName);
-        log.Info($"Delete package {file.Name}");
+
+        log.Info($"Delete package {packageFile.Name}.");
       }
     }
     
-    private static void WriteRevision(string branchName, int revision)
+    private static void ReadRevision()
     {
-      var revPath = Path.Combine(AppPaths.Branches, branchName, ".rev");
-      using (var stream = new FileStream(branchName, FileMode.OpenOrCreate, FileAccess.Write))
-      using (var writer = new StreamWriter(stream))
-        writer.WriteLine(_revision);
+      foreach (var branchPath in Directory.GetDirectories(AppPaths.Branches))
+        _revision = Math.Max(_revision, ReadRevision(Path.GetFileName(branchPath)));
     }
-    
+
     private static int ReadRevision(string branchName)
     {
       var revPath = Path.Combine(AppPaths.Branches, branchName, ".rev");
+      using (var reader = new StreamReader(revPath))
+        return int.Parse(reader.ReadLine());
+    }
 
-      if (!Directory.Exists(revPath))
-        Exceptions.ServerError($"Revision file '{revPath}' not found.");
-
-      using (var reader = new StreamReader(revPath)) {
-        var revStr = reader.ReadLine();
-        int rev = 0;
-        int.TryParse(revStr, out rev);
-        return rev;
-      }
+    private static void WriteRevision(string branchName, int revision)
+    {
+      var revPath = Path.Combine(AppPaths.Branches, branchName, ".rev");
+      using (var stream = new FileStream(revPath, FileMode.OpenOrCreate, FileAccess.Write))
+      using (var writer = new StreamWriter(stream))
+        writer.WriteLine(revision);
     }
   }
 }

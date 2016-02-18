@@ -26,6 +26,12 @@ namespace Server.Api.Uploads
       var packageInfo = new PackageInfo(fileName);
 
       var branchPath = AppPaths.Uploads + "/" + packageInfo.Name;
+      
+      if (System.IO.File.Exists(branchPath + ".zip"))
+        System.IO.File.Delete(branchPath + ".zip");
+      if (System.IO.File.Exists(branchPath + ".tmp"))
+        System.IO.File.Delete(branchPath + ".tmp");
+      
       await package.SaveAsAsync(branchPath + ".tmp");
       System.IO.File.Move($"{branchPath}.tmp", $"{branchPath}.zip");
       BranchManager.PackageUploaded();
