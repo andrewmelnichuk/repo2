@@ -32,8 +32,6 @@ namespace HelloMvc
       app.UseDeveloperExceptionPage();
 
       LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");
-      
-      BranchManager.Initialize();
     }
   }
 }

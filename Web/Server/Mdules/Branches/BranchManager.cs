@@ -1,127 +1,123 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using ICSharpCode.SharpZipLib.Zip;
 using NLog;
 using Server.Common;
 
 namespace Server.Modules.Branches
 {
-    public class BranchManager
+  public class BranchManager
   {
     private static Logger log = LogManager.GetLogger("BranchManager");
 
-    private static Thread _uploadThread = new Thread(UploadhreadProc);
-    private static ManualResetEvent _uploadEvent = new ManualResetEvent(false);
-
-    private static Thread _modelThread = new Thread(ModelThreadProc);
-    private static BlockingCollection<string> _uploadedBranches = new BlockingCollection<string>();
+    private static ConcurrentDictionary<string, Branch> _branches = new ConcurrentDictionary<string, Branch>();
+    private static ConcurrentDictionary<string, object> _locks = new ConcurrentDictionary<string, object>();
     
-    private static ConcurrentDictionary<string, Branch> _model = new ConcurrentDictionary<string, Branch>();
     private static int _revision;
+
+    private static bool _initialized;
+
+    public class EditContext : IDisposable
+    {
+      private bool _lockTaken;
+      private bool _completed;
+      private object _lockObj;
+      private string _branchName;
+      
+      public Branch Branch;
+
+      public EditContext(string branchName)
+      {
+        _branchName = branchName;
+
+        _lockObj = _locks.GetOrAdd(_branchName.ToLower(), new object()); 
+
+        Branch branch;
+        if (_branches.TryGetValue(_branchName, out branch))
+          Branch = (Branch) branch.Clone();
+
+        Monitor.TryEnter(_lockObj, ref _lockTaken);
+        
+        if (_lockTaken)  
+          log.Info($"Obtained lock for branch '{_branchName}'.");
+        else
+          Exceptions.ServerError("Unable to obtain lock for branch '{_branchName}'.");
+      }
+
+      public void Complete()
+      {
+        WriteRevision(Branch.Name, ++_revision);
+
+        var new_ = ReadBranch(_branchName);
+        var current = _branches[_branchName];
+
+        _branches.TryUpdate(_branchName, new_, current);
+
+        _completed = true;
+      }
+
+      public void Dispose()
+      {
+        // if (!_completed) ????
+        if (_lockTaken) {
+          Monitor.Exit(_lockObj);
+          log.Info($"Release lock for branch '{_branchName}'.");
+        }
+      }
+    }
 
     static BranchManager()
     {
       Initialize();
-      
-      _uploadThread.Start();
-      _modelThread.Start();
     }
 
     public static void Initialize()
     {
-      // ReadModel();
-      // ReadRevision();
-    }
-
-    private static void ReadModel()
-    {
-      // skip branches without revision!!!!
-      var dirs = Directory.GetDirectories(AppPaths.Branches);
-      foreach (var dir in dirs) {
-        var branch = new Branch { Name = dir, BuildNum = 123, Uploaded = DateTime.UtcNow };
-        _model[branch.Name] = branch;
+      if (_initialized) {
+        log.Info("Already initialized.");
+        return;
       }
+
+      ReadBranches();
     }
 
-    private static void ModelThreadProc()
+    public static EditContext Edit(string branchName)
     {
-      while (true) {
-        var branchName = _uploadedBranches.Take();
-        var branchDir = Path.Combine(AppPaths.Branches, branchName);
-        if (Directory.Exists(branchDir)) {
-          var branch = new Branch {
-            Name = branchName,
-            Uploaded = Directory.GetLastWriteTimeUtc(branchDir)
-          };
-        }
-      }
+      return new EditContext(branchName);
     }
 
-    public static void PackageUploaded()
+    private static void ReadBranches()
     {
-      _uploadEvent.Set();
-    }
-
-    private static async void UploadhreadProc()
-    {
-      var uploadDir = new DirectoryInfo(AppPaths.Uploads);
-
-      while (true)
-      {
-        _uploadEvent.WaitOne(5000);
-
-        var packageFile = (
-          from f in uploadDir.GetFiles("*.zip")
-          orderby System.IO.File.GetLastWriteTimeUtc(f.FullName)
-          select f
-        ).FirstOrDefault();
-
-        if (packageFile == null) {
-          _uploadEvent.Reset();
+      var branchPaths = Directory.GetDirectories(AppPaths.Branches);
+      foreach (var branchPath in branchPaths) {
+        var branchName = Path.GetFileName(branchPath);
+        var branch = ReadBranch(branchName);
+        if (branch.Revision < 0) {
+          log.Info($"Branch '{branchName}' doesn't have revision. Skipped.");
           continue;
         }
-
-        var packageInfo = new PackageInfo(packageFile.FullName);
-        log.Info($"Unpack branch '{packageInfo.Branch}' from package '{packageFile.Name}'.");
-
-        using (var stream = System.IO.File.Open(packageFile.FullName, FileMode.Open, FileAccess.Read))
-        using (var zipStream = new ZipInputStream(stream))
-        {
-          ZipEntry entry;
-          while ((entry = zipStream.GetNextEntry()) != null)
-          {
-            var entryPath = Path.Combine(AppPaths.Branches, entry.Name);
-            if (entry.IsDirectory)
-              Directory.CreateDirectory(entryPath);
-            else
-              using (var fileStream = System.IO.File.Create(entryPath))
-                await zipStream.CopyToAsync(fileStream);
-          }
-        }
-
-        WriteRevision(Path.GetFileName(Path.Combine(AppPaths.Branches, packageInfo.Branch)), ++_revision);
-        System.IO.File.Delete(packageFile.FullName);
-
-        _uploadedBranches.Add(packageInfo.Branch);
-
-        log.Info($"Delete package {packageFile.Name}.");
+        _branches[branch.Name] = branch;
+        _revision = Math.Max(_revision, branch.Revision);
       }
     }
-    
-    private static void ReadRevision()
+
+    private static Branch ReadBranch(string branchName)
     {
-      foreach (var branchPath in Directory.GetDirectories(AppPaths.Branches))
-        _revision = Math.Max(_revision, ReadRevision(Path.GetFileName(branchPath)));
+      return new Branch { 
+        Name = branchName,
+        Revision = ReadRevision(branchName), 
+        BuildNum = 123, 
+        Uploaded = DateTime.UtcNow
+      };
     }
 
-    private static int ReadRevision(string branchName)
+    private static int ReadRevision(string branchName, int notFound = -1)
     {
+      int rev;
       var revPath = Path.Combine(AppPaths.Branches, branchName, ".rev");
       using (var reader = new StreamReader(revPath))
-        return int.Parse(reader.ReadLine());
+        return int.TryParse(reader.ReadLine(), out rev) ? rev : notFound;
     }
 
     private static void WriteRevision(string branchName, int revision)

@@ -5,7 +5,7 @@ using Microsoft.Net.Http.Headers;
 using Server.Common;
 using Server.Modules.Branches;
 
-namespace Server.Api.Uploads
+namespace Server.Uploads
 {
   [Route("uploads")]
   public class UploadsController : Controller
@@ -34,7 +34,7 @@ namespace Server.Api.Uploads
       
       await package.SaveAsAsync(branchPath + ".tmp");
       System.IO.File.Move($"{branchPath}.tmp", $"{branchPath}.zip");
-      BranchManager.PackageUploaded();
+      UploadManager.PackageUploaded();
     }
   }
 }
