@@ -48,7 +48,6 @@ namespace Server.Modules.Branches
       public void Complete()
       {
         WriteRevision(Branch.Name, ++_revision);
-
         var new_ = ReadBranch(_branchName);
         var current = _branches[_branchName];
 
@@ -112,12 +111,14 @@ namespace Server.Modules.Branches
       };
     }
 
-    private static int ReadRevision(string branchName, int notFound = -1)
+    private static int ReadRevision(string branchName)
     {
-      int rev;
+      int rev = -1;
       var revPath = Path.Combine(AppPaths.Branches, branchName, ".rev");
+      if (!File.Exists(revPath))
+        return rev;
       using (var reader = new StreamReader(revPath))
-        return int.TryParse(reader.ReadLine(), out rev) ? rev : notFound;
+        return int.TryParse(reader.ReadLine(), out rev) ? rev : rev;
     }
 
     private static void WriteRevision(string branchName, int revision)
