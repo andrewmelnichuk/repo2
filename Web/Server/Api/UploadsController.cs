@@ -3,7 +3,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Net.Http.Headers;
 using Server.Common;
-using Server.Modules.Branches;
+using Server.Modules;
 
 namespace Server.Uploads
 {
@@ -17,24 +17,15 @@ namespace Server.Uploads
     }
     
     [HttpPost("")]
-    public async Task Upload(IFormFile package)
+    public async Task Upload(IFormFile file)
     {
-      if (package == null || package.Length == 0)
-        Exceptions.ServerError("Invalid package file");
+      if (file == null || file.Length == 0)
+        Exceptions.ServerError("Invalid file.");
 
-      var fileName = ContentDispositionHeaderValue.Parse(package.ContentDisposition).FileName.Trim('"');
-      var packageInfo = new PackageInfo(fileName);
+      var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
 
-      var branchPath = AppPaths.Uploads + "/" + packageInfo.Name;
-      
-      if (System.IO.File.Exists(branchPath + ".zip"))
-        System.IO.File.Delete(branchPath + ".zip");
-      if (System.IO.File.Exists(branchPath + ".tmp"))
-        System.IO.File.Delete(branchPath + ".tmp");
-      
-      await package.SaveAsAsync(branchPath + ".tmp");
-      System.IO.File.Move($"{branchPath}.tmp", $"{branchPath}.zip");
-      UploadManager.PackageUploaded();
+      using (var stream = file.OpenReadStream())
+        await DeployManager.Upload(stream, fileName);
     }
   }
 }
