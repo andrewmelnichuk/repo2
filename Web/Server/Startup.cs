@@ -4,11 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Config;
 using Server.Common;
+using Server.Modules;
 using Server.Modules.Branches;
 
 namespace HelloMvc
 {
-    public class Startup
+  public class Startup
   {
     public void ConfigureServices(IServiceCollection services)
     {
@@ -32,6 +33,8 @@ namespace HelloMvc
       app.UseDeveloperExceptionPage();
 
       LogManager.Configuration = new XmlLoggingConfiguration(Environment.CurrentDirectory + @"\nlog.config");
+      
+      DeployManager.Initialize();
     }
   }
 }

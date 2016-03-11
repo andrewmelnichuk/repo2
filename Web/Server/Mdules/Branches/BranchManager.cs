@@ -107,7 +107,6 @@ namespace Server.Modules.Branches
         Name = branchName,
         Revision = ReadRevision(branchName), 
         BuildNum = 123, 
-        Uploaded = DateTime.UtcNow
       };
     }
 
