@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,17 +11,20 @@ using Server.Common;
 
 namespace Server.Modules
 {
-    public class Branch
+  public class Branch
   {
     public string Name;
+    public bool DeploySpecs;
     public long BuildNum;
     public int Revision;
     public bool IsDeleted;
-    public List<Package> DeployQueue;
+    public List<Package> Packages;
+    public Package DeployingPackage;
+    public BranchState State;
     
     public Branch()
     {
-      DeployQueue = new List<Package>();
+      Packages = new List<Package>();
     }
     
     public Branch Clone()
@@ -29,11 +33,17 @@ namespace Server.Modules
     }
   }
 
+  public enum BranchState
+  {
+    
+  }
+
   public class Package
   {
     public string BranchName;
     public DateTime UploadTimeUtc;
     public string FileName;
+    public string FullName;
     public PackageState State;
 
     public static Package FromFile(FileInfo file)
@@ -44,6 +54,7 @@ namespace Server.Modules
         BranchName = tokens[0],
         UploadTimeUtc = new DateTime(Convert.ToInt64(tokens[1])),
         FileName = file.Name,
+        FullName = file.FullName,
         State = PackageState.Pending 
       };
     }
@@ -60,7 +71,7 @@ namespace Server.Modules
     private static Logger log = LogManager.GetLogger("DeployManager");
 
     private static Thread _mainThread = new Thread(MainThreadProc);
-    private static ManualResetEvent _packageEvent = new ManualResetEvent(false);
+    private static AutoResetEvent _mainEvent = new AutoResetEvent(false);
 
     private static object _locker = new object();
     private static List<Branch> _branches = new List<Branch>();
@@ -75,8 +86,9 @@ namespace Server.Modules
         Exceptions.ServerError("Deployment manager already initialized.");
 
       ReadBranches();
+      ProcessUploads();
 
-      _packageEvent.Set();
+      _mainEvent.Set();
       _mainThread.Start();
 
       _initialized = true;
@@ -86,39 +98,49 @@ namespace Server.Modules
     {
       var branchesDir = new DirectoryInfo(AppPaths.Branches);
       foreach (var dir in branchesDir.GetDirectories()) {
-        var branch = ReadBranch(dir);
-        if (branch != null) {
+        var branch = LoadBranch(dir);
+        if (branch != null)
           _branches.Add(branch);
-        }
-        else {
-          log.Warn($"Found empty branch dir {dir}.");
-          // TODO restore branch from upload queue
-          continue;
-        }
       }
     }
 
-    private static Branch ReadBranch(DirectoryInfo dir)
+    private static void ProcessUploads()
     {
-      var jsonFile = Path.Combine(dir.FullName, ".branch.json");
+      var extensions = new[] {".zip", ".tmp"};
+      var packagesToDelete = new List<Package>();
+
+      var uploadDir = new DirectoryInfo(AppPaths.Uploads);
+      var packagesByBranch = _branches.ToDictionary(b => b.Name, b => b.Packages);
+      foreach (var file in uploadDir.EnumerateFiles().Where(file => extensions.Contains(file.Extension.ToLower()))) {
+        var package = Package.FromFile(file);
+        if (!packagesByBranch.ContainsKey(package.BranchName) || 
+             packagesByBranch[package.BranchName].All(p => p.UploadTimeUtc != package.UploadTimeUtc))
+          packagesToDelete.Add(package);
+      }
+
+      foreach (var package in packagesToDelete) {
+        log.Info($"Delete unreferenced package {package.FileName}, upoaded at {package.UploadTimeUtc}");
+        File.Delete(package.FullName);
+      }
+    }
+
+    private static Branch LoadBranch(DirectoryInfo dir)
+    {
+      var jsonFile = Path.Combine(dir.FullName, ".data.json");
       var tmpFile = Path.ChangeExtension(jsonFile, "tmp");
       var oldFile = Path.ChangeExtension(jsonFile, "old");
 
-      if (!File.Exists(jsonFile)) {
-        if (File.Exists(tmpFile))
-          File.Delete(tmpFile);
-        return null;
+      if (File.Exists(oldFile)) {
+        if (File.Exists(jsonFile))
+          File.Delete(jsonFile);
+        File.Move(oldFile, jsonFile);
       }
-      else if (File.Exists(tmpFile) && File.Exists(jsonFile)) { // write was not completed
+
+      if (File.Exists(tmpFile))
         File.Delete(tmpFile);
-      }
-      else if (File.Exists(tmpFile) && File.Exists(oldFile)) { // write completed but not committed
-        File.Move(tmpFile, jsonFile);
-        File.Delete(oldFile);
-      }
-      else if (File.Exists(jsonFile) && File.Exists(oldFile)) { // write completed and committed
-        File.Delete(oldFile);
-      }
+
+      if (!File.Exists(jsonFile))
+        return null;
 
       using (var stream = File.Open(jsonFile, FileMode.Open, FileAccess.Read, FileShare.Read))
       using (var reader = new StreamReader(stream)) {
@@ -127,15 +149,25 @@ namespace Server.Modules
       }
     }
 
-    public static void WriteBranch(Branch branch)
+    public static void SaveBranch(Branch branch)
     {
       var dirPath = Path.Combine(AppPaths.Branches, branch.Name);
       if (!Directory.Exists(dirPath))
         Directory.CreateDirectory(dirPath);
 
-      var jsonFile = Path.Combine(dirPath, ".branch.json");
+      var jsonFile = Path.Combine(dirPath, ".data.json");
       var tmpFile = Path.ChangeExtension(jsonFile, "tmp");
       var oldFile = Path.ChangeExtension(jsonFile, "old");
+
+      // restore in case of previous failed state
+      if (File.Exists(oldFile)) {
+        if (File.Exists(jsonFile))
+          File.Delete(jsonFile);
+        File.Move(oldFile, jsonFile);
+      }
+
+      if (File.Exists(tmpFile))
+        File.Delete(tmpFile);
 
       // write to tmp file
       using (var stream = File.Open(tmpFile, FileMode.Create, FileAccess.Write, FileShare.Write))
@@ -145,13 +177,15 @@ namespace Server.Modules
       }
 
       // rename .json -> .old
-      File.Move(jsonFile, oldFile);
+      if (File.Exists(jsonFile))
+        File.Move(jsonFile, oldFile);
 
       // rename .tmp -> .json
       File.Move(tmpFile, jsonFile);
       
       // remove .old
-      File.Delete(oldFile);  
+      if (File.Exists(oldFile))
+        File.Delete(oldFile);  
     }
 
     public static async Task Upload(Stream inStream, string fileName)
@@ -169,66 +203,62 @@ namespace Server.Modules
       lock (_locker) {
         var branch = _branches.SingleOrDefault(b => string.Compare(b.Name, package.BranchName, true) == 0);
 
-        var isNewBranch= false; 
+        var isNewBranch = false;
         if (branch == null) {
           isNewBranch = true;
-          branch = new Branch { Name = package.BranchName };
+          branch = new Branch {Name = package.BranchName};
+          _branches.Add(branch);
         }
 
-        branch.DeployQueue.Add(package);
+        branch.Packages.Add(package);
 
         try
         {
-          WriteBranch(branch);
-          if (isNewBranch)
-            _branches.Add(branch);
-          log.Info($"Package uploaded at {package.UploadTimeUtc} added to branch {branch.Name} deploy queue");
+          SaveBranch(branch);
+          log.Info($"Package {package.FileName} added to branch {branch.Name} queue");
         }
         catch (Exception ex)
         {
-          branch.DeployQueue.Remove(package);
-          log.Error(ex, $"Error writing branch {branch.Name}");
+          if (isNewBranch)
+            _branches.Remove(branch);
+          else
+            branch.Packages.Remove(package);
+
+          File.Delete(package.FullName);
+
+          log.Error(ex, $"Error save branch {branch.Name}");
           throw;
         }
       }
 
-      _packageEvent.Set();
+      _mainEvent.Set();
     }
 
     private static void MainThreadProc()
     {
-      while (true)
-      {
-        _packageEvent.WaitOne();
-
-        var uqPackages = new HashSet<string>();
-        var oldPackages = new List<Package>();
-
+      //TODO trycatch
+      while (_mainEvent.WaitOne()) {
         lock (_locker) {
-          for (var i = _packages.Count - 1; i >= 0; i--) {
-            var package = _packages[i];
-            if (!uqPackages.Contains(package.BranchName))
-              uqPackages.Add(package.BranchName);
-            else if (package.State == PackageState.Pending)
-              oldPackages.Add(package);
-              _packages.RemoveAt(i);
+
+          // find next to deploy branch
+          Branch branchToDeploy = null;
+          foreach (var branch in _branches) {
+            if (!branch.DeploySpecs
+              || branch.Packages.Count == 0
+              || branch.Packages[0].State == PackageState.Deploying)
+              continue;
+
+            if (branchToDeploy == null || branch.Packages[0].UploadTimeUtc < branchToDeploy.Packages[0].UploadTimeUtc)
+              branchToDeploy = branch;
+          }
+          
+          if (branchToDeploy != null && Interlocked.Read(ref DeployThreadsCount) > 0) {
+            branchToDeploy.Packages[0].State = PackageState.Deploying;
+            Interlocked.Decrement(ref DeployThreadsCount);
+            ThreadPool.QueueUserWorkItem(_ => Deploy(branchToDeploy));
           }
         }
 
-        foreach (var package in oldPackages) {
-          File.Delete(Path.Combine(AppPaths.Uploads, package.FileName));
-          log.Info($"Remove expired package {package.BranchName}, uploaded at {package.UploadTimeUtc}");
-        }
-
-        lock (_locker) {
-          for (var i = 0; i < _packages.Count && Interlocked.Read(ref DeployThreadsCount) > 0; i++) {
-            if (_packages[i].State == PackageState.Pending) {
-              _packages[i].State = PackageState.Deploying; 
-              Interlocked.Decrement(ref DeployThreadsCount);
-              ThreadPool.QueueUserWorkItem(_ => DeployPackage(_packages[i]));
-            }
-          }
-        }
 /*
         var packageInfo = new PackageInfo(package.FullName);
         using (var cx = BranchManager.Edit(packageInfo.Branch))
@@ -264,11 +294,42 @@ namespace Server.Modules
       }
     }
     
-    private static void DeployPackage(Package package)
+    private static void Deploy(Branch branch)
     {
-      log.Info($"Deploying package {package.BranchName}.");
+      log.Info($"Deploying branch {branch.Name}");
       
-      // File.Move(Path.Combine(AppPaths.Uploads, package.FileName), Path.Combine(AppPaths.Uploads, package.))
+      Package package = null;
+      try
+      {
+        Thread.Sleep(3000); // DO DEPLOY
+        lock (_locker) {
+          package = branch.Packages[0];
+          branch.Packages.RemoveAt(0);
+          SaveBranch(branch);
+        }
+        try {
+          File.Delete(package.FullName);
+        }
+        catch (Exception ex) {
+          log.Warn(ex, $"Error deleting package file {package.FileName}. File will be deleted on later.");
+        }
+      }
+      catch (Exception ex)
+      {
+        log.Error(ex, $"Error deploying package {package.FileName} of branch {branch.Name}");
+        lock (_locker) {
+          if (package != null) {
+            package.State = PackageState.Pending;
+            branch.Packages.Insert(0, package);
+          }
+          else {
+            branch.Packages[0].State = PackageState.Pending;
+          }
+          //TODO mark branch as postponed
+        }
+      }
+      Interlocked.Increment(ref DeployThreadsCount);
+      _mainEvent.Set();
     }
   }
 }
